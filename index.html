@@ -1012,11 +1012,11 @@
 <!-- ===== SETUP SCREEN ===== -->
 <div id="setupScreen">
   <div class="setup-card">
-    <div class="setup-title">初期設定</div>
-    <div class="setup-desc">GASのウェブアプリURLを入力してください。<br>このURLはスプレッドシートのデータに接続するために使用されます。</div>
+    <div class="setup-title">Configuración inicial</div>
+    <div class="setup-desc">Ingresa la URL de tu aplicación web de GAS.<br>Esta URL se usa para conectar con los datos de tu hoja de cálculo.</div>
     <input class="setup-input" id="gasUrlInput" type="url" placeholder="https://script.google.com/macros/s/..." autocomplete="off">
     <div id="setupError" style="color:var(--accent);font-size:13px;margin-bottom:12px;"></div>
-    <button class="btn-primary" onclick="saveGasUrl()">接続して開始</button>
+    <button class="btn-primary" onclick="saveGasUrl()">Conectar y comenzar</button>
   </div>
 </div>
 
@@ -1025,11 +1025,27 @@
   <div class="login-logo">ANIME<span>POS</span></div>
   <div class="login-sub">MERCADO SYSTEM</div>
   <div class="login-card">
-    <div class="login-label">スタッフを選択</div>
-    <div class="staff-list" id="staffList">
-      <div class="loading">読み込み中</div>
-    </div>
-    <div class="login-label">PINコードを入力</div>
+    <div class="login-label">Seleccionar empleado</div>
+    <select id="staffSelect" onchange="selectStaffFromDropdown(this.value)" style="
+      width:100%;
+      background:var(--surface2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:14px 16px;
+      color:var(--text);
+      font-size:15px;
+      font-family:'Noto Sans JP',sans-serif;
+      margin-bottom:20px;
+      appearance:none;
+      -webkit-appearance:none;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'8\' viewBox=\'0 0 12 8\'><path fill=\'%238888aa\' d=\'M1 1l5 5 5-5\'/></svg>');
+      background-repeat:no-repeat;
+      background-position:right 16px center;
+      cursor:pointer;
+    ">
+      <option value="">-- Selecciona tu nombre --</option>
+    </select>
+    <div class="login-label">Ingresar PIN</div>
     <div class="pin-display" id="pinDisplay">
       <div class="pin-dot" id="dot0"></div>
       <div class="pin-dot" id="dot1"></div>
@@ -1060,25 +1076,25 @@
   <div class="topbar">
     <div class="topbar-logo">ANIME<span>POS</span></div>
     <div class="topbar-right">
-      <div class="sync-badge" id="syncBadge">● オンライン</div>
+      <div class="sync-badge" id="syncBadge">● En línea</div>
       <div class="staff-name-badge" id="currentStaffBadge"></div>
-      <button class="logout-btn" onclick="logout()">ログアウト</button>
+      <button class="logout-btn" onclick="logout()">Salir</button>
     </div>
   </div>
 
   <!-- Tab nav -->
   <div class="tabnav">
     <div class="tab active" onclick="switchTab('register')" id="tab-register">
-      <span class="tab-icon">🛒</span>レジ
+      <span class="tab-icon">🛒</span>Caja
     </div>
     <div class="tab" onclick="switchTab('inventory')" id="tab-inventory">
-      <span class="tab-icon">📦</span>在庫
+      <span class="tab-icon">📦</span>Inventario
     </div>
     <div class="tab" onclick="switchTab('sales')" id="tab-sales">
-      <span class="tab-icon">📊</span>売上
+      <span class="tab-icon">📊</span>Ventas
     </div>
     <div class="tab" onclick="switchTab('receiving')" id="tab-receiving">
-      <span class="tab-icon">📥</span>入荷
+      <span class="tab-icon">📥</span>Entrada
     </div>
   </div>
 
@@ -1087,29 +1103,29 @@
     <div class="register-layout">
       <!-- Search & Scan -->
       <div class="search-bar">
-        <input class="search-input" id="productSearch" type="text" placeholder="商品名・バーコードで検索..." oninput="filterProducts()">
+        <input class="search-input" id="productSearch" type="text" placeholder="Buscar producto o código de barras..." oninput="filterProducts()">
         <button class="scan-btn" onclick="openScanner()">📷</button>
       </div>
 
       <!-- Product Grid -->
       <div class="product-grid" id="productGrid">
-        <div class="loading">商品を読み込み中</div>
+        <div class="loading">Cargando productos</div>
       </div>
 
       <!-- Cart -->
       <div class="cart-section">
         <div class="cart-header">
-          <span>🛒 カート <span id="cartCount" style="color:var(--accent)"></span></span>
-          <button class="cart-clear" onclick="clearCart()">クリア</button>
+          <span>🛒 Carrito <span id="cartCount" style="color:var(--accent)"></span></span>
+          <button class="cart-clear" onclick="clearCart()">Limpiar</button>
         </div>
         <div class="cart-items" id="cartItems">
-          <div class="cart-empty">商品を選択してください</div>
+          <div class="cart-empty">Selecciona un producto</div>
         </div>
 
         <!-- Discount -->
         <div class="discount-section" id="discountSection">
           <div class="discount-toggle" id="discountToggle" onclick="toggleDiscount()">
-            <span id="discountToggleLabel">🏷️ 割引を追加</span>
+            <span id="discountToggleLabel">🏷️ Agregar descuento</span>
             <span id="discountChevron">▼</span>
           </div>
           <div class="discount-panel" id="discountPanel">
@@ -1120,35 +1136,35 @@
         <!-- Totals -->
         <div class="totals-section">
           <div class="total-row">
-            <span>小計</span>
+            <span>Subtotal</span>
             <span id="subtotalDisplay">MXN 0</span>
           </div>
           <div class="total-row discount" id="discountRow" style="display:none">
-            <span id="discountLabel">割引</span>
+            <span id="discountLabel">Descuento</span>
             <span id="discountDisplay"></span>
           </div>
           <div class="total-final">
-            <span class="total-label">合計</span>
+            <span class="total-label">Total</span>
             <span class="total-amount" id="totalDisplay">MXN 0</span>
           </div>
         </div>
 
         <!-- Payment -->
         <div class="payment-section">
-          <div class="payment-label">決済方法</div>
+          <div class="payment-label">Método de pago</div>
           <div class="payment-btns">
             <button class="pay-btn cash" onclick="selectPayment('現金')">
-              <span class="pay-icon">💵</span>現金
+              <span class="pay-icon">💵</span>Efectivo
             </button>
             <button class="pay-btn card" onclick="selectPayment('カード')">
-              <span class="pay-icon">💳</span>カード
+              <span class="pay-icon">💳</span>Tarjeta
             </button>
             <button class="pay-btn bank" onclick="selectPayment('銀行振込')">
-              <span class="pay-icon">🏦</span>銀行振込
+              <span class="pay-icon">🏦</span>Transferencia
             </button>
           </div>
           <button class="checkout-btn" id="checkoutBtn" onclick="checkout()" disabled>
-            会計する
+            COBRAR
           </button>
         </div>
       </div>
@@ -1158,9 +1174,9 @@
   <!-- ===== INVENTORY TAB ===== -->
   <div id="inventoryTab" class="hidden">
     <div class="inventory-layout">
-      <input class="inv-search" id="invSearch" type="text" placeholder="商品名・カテゴリーで検索..." oninput="filterInventory()">
+      <input class="inv-search" id="invSearch" type="text" placeholder="Buscar por nombre o categoría..." oninput="filterInventory()">
       <div class="inv-list" id="invList">
-        <div class="loading">在庫を読み込み中</div>
+        <div class="loading">Cargando inventario</div>
       </div>
     </div>
   </div>
@@ -1170,19 +1186,19 @@
     <div class="sales-layout">
       <div class="sales-summary" id="salesSummary">
         <div class="summary-card">
-          <div class="summary-label">本日の売上</div>
+          <div class="summary-label">Ventas de hoy</div>
           <div class="summary-value green" id="todaySales">MXN 0</div>
         </div>
         <div class="summary-card">
-          <div class="summary-label">取引件数</div>
+          <div class="summary-label">Transacciones</div>
           <div class="summary-value yellow" id="todayCount">0</div>
         </div>
         <div class="summary-card">
-          <div class="summary-label">割引総額</div>
+          <div class="summary-label">Total descuentos</div>
           <div class="summary-value red" id="todayDiscount">MXN 0</div>
         </div>
         <div class="summary-card">
-          <div class="summary-label">未同期</div>
+          <div class="summary-label">Sin sincronizar</div>
           <div class="summary-value" id="unsyncedCount" style="color:var(--text2)">0</div>
         </div>
       </div>
@@ -1201,38 +1217,38 @@
       <div id="recvAccessDenied" class="hidden">
         <div style="text-align:center;padding:48px 24px;color:var(--text2);">
           <div style="font-size:48px;margin-bottom:16px;">🔒</div>
-          <div style="font-size:16px;font-weight:700;margin-bottom:8px;">アクセス権限がありません</div>
-          <div style="font-size:13px;">入荷管理はオーナーまたはシニアスタッフのみ使用できます</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:8px;">Sin permiso de acceso</div>
+          <div style="font-size:13px;">Solo el dueño o empleados senior pueden usar esta función</div>
         </div>
       </div>
 
       <div id="recvForm">
         <!-- ロット情報 -->
         <div class="recv-section">
-          <div class="recv-section-header">📋 ロット情報</div>
+          <div class="recv-section-header">📋 Información del lote</div>
           <div class="recv-section-body">
             <div class="recv-row">
               <div class="recv-field">
-                <div class="recv-label">ロットID</div>
+                <div class="recv-label">ID de lote</div>
                 <input class="recv-input" id="recvLotId" type="text" placeholder="LOT004" oninput="updateRecvSummary()">
               </div>
               <div class="recv-field">
-                <div class="recv-label">仕入れ日</div>
+                <div class="recv-label">Fecha de compra</div>
                 <input class="recv-input" id="recvDate" type="date" oninput="updateRecvSummary()">
               </div>
             </div>
             <div class="recv-row">
               <div class="recv-field">
-                <div class="recv-label">為替レート (JPY→MXN)</div>
+                <div class="recv-label">Tipo de cambio (JPY→MXN)</div>
                 <input class="recv-input" id="recvRate" type="number" step="0.001" placeholder="0.130" oninput="updateRecvSummary()">
               </div>
               <div class="recv-field">
-                <div class="recv-label">実際の送料+税 (MXN)</div>
+                <div class="recv-label">Envío + impuestos reales (MXN)</div>
                 <input class="recv-input" id="recvShipping" type="number" placeholder="2000" oninput="updateRecvSummary()">
               </div>
             </div>
             <div class="recv-field">
-              <div class="recv-label">税還付額 (MXN) ※ある場合のみ</div>
+              <div class="recv-label">Devolución de impuestos (MXN) ※si aplica</div>
               <input class="recv-input" id="recvRefund" type="number" placeholder="0" oninput="updateRecvSummary()">
             </div>
           </div>
@@ -1240,39 +1256,39 @@
 
         <!-- 商品リスト -->
         <div class="recv-section">
-          <div class="recv-section-header">📦 入荷商品</div>
+          <div class="recv-section-header">📦 Productos recibidos</div>
           <div class="recv-section-body">
             <div class="recv-product-list" id="recvProductList"></div>
-            <button class="recv-add-btn" onclick="openProductPicker()">＋ 商品を追加</button>
+            <button class="recv-add-btn" onclick="openProductPicker()">＋ Agregar producto</button>
           </div>
         </div>
 
         <!-- サマリー -->
         <div class="recv-section">
-          <div class="recv-section-header">💰 コスト計算</div>
+          <div class="recv-section-header">💰 Cálculo de costos</div>
           <div class="recv-section-body">
             <div class="recv-summary" id="recvSummary">
-              <div class="recv-sum-row"><span>商品数（種類）</span><span id="sumProductCount">0</span></div>
-              <div class="recv-sum-row"><span>総入荷数量</span><span id="sumTotalQty">0 個</span></div>
-              <div class="recv-sum-row"><span>仕入れ原価合計 (MXN)</span><span id="sumCostTotal">MXN 0</span></div>
-              <div class="recv-sum-row"><span>実際の送料+税</span><span id="sumShipping">MXN 0</span></div>
-              <div class="recv-sum-row"><span>税還付額</span><span id="sumRefund" style="color:var(--accent3)">MXN 0</span></div>
+              <div class="recv-sum-row"><span>Productos (tipos)</span><span id="sumProductCount">0</span></div>
+              <div class="recv-sum-row"><span>Cantidad total</span><span id="sumTotalQty">0 pcs</span></div>
+              <div class="recv-sum-row"><span>Costo total de compra (MXN)</span><span id="sumCostTotal">MXN 0</span></div>
+              <div class="recv-sum-row"><span>Envío + impuestos reales</span><span id="sumShipping">MXN 0</span></div>
+              <div class="recv-sum-row"><span>Devolución de impuestos</span><span id="sumRefund" style="color:var(--accent3)">MXN 0</span></div>
               <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
-              <div class="recv-sum-row highlight"><span>販売価格合計 (MXN)</span><span id="sumSaleTotal">MXN 0</span></div>
-              <div class="recv-sum-row highlight"><span>送料枠合計 (MXN)</span><span id="sumShippingBudget">MXN 0</span></div>
+              <div class="recv-sum-row highlight"><span>Total precio de venta (MXN)</span><span id="sumSaleTotal">MXN 0</span></div>
+              <div class="recv-sum-row highlight"><span>Margen para envío (MXN)</span><span id="sumShippingBudget">MXN 0</span></div>
               <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
-              <div class="recv-sum-row" id="sumPoolRow"><span>このロット損益</span><span id="sumPoolResult">MXN 0</span></div>
+              <div class="recv-sum-row" id="sumPoolRow"><span>Resultado del lote</span><span id="sumPoolResult">MXN 0</span></div>
             </div>
             <div style="font-size:11px;color:var(--text2);line-height:1.6;">
-              ※ 送料枠 = 販売価格合計 − 仕入れ原価合計<br>
-              ※ ロット損益 = 送料枠 − 実際の送料+税 + 税還付
+              ※ Margen = Precio venta total − Costo compra total<br>
+              ※ Resultado = Margen − Envío real + Devolución
             </div>
           </div>
         </div>
 
         <!-- 登録ボタン -->
         <button class="recv-submit-btn" id="recvSubmitBtn" onclick="submitReceiving()" disabled>
-          入荷を登録する
+          REGISTRAR ENTRADA
         </button>
       </div>
     </div>
@@ -1282,11 +1298,11 @@
 <div class="modal-overlay" id="successModal">
   <div class="modal">
     <div class="modal-icon">✅</div>
-    <div class="modal-title">会計完了</div>
+    <div class="modal-title">¡Venta completada!</div>
     <div class="modal-amount" id="modalAmount"></div>
     <div class="modal-sub" id="modalSub"></div>
     <div class="modal-receipt" id="modalReceipt"></div>
-    <button class="modal-close" onclick="closeModal()">次の会計へ</button>
+    <button class="modal-close" onclick="closeModal()">Siguiente venta</button>
   </div>
 </div>
 
@@ -1294,10 +1310,10 @@
 <div class="product-picker" id="productPicker">
   <div class="product-picker-sheet">
     <div class="picker-header">
-      <div class="picker-title">商品を選択</div>
+      <div class="picker-title">Seleccionar producto</div>
       <button class="picker-close" onclick="closeProductPicker()">✕</button>
     </div>
-    <input class="picker-search" id="pickerSearch" type="text" placeholder="商品名・カテゴリーで検索..." oninput="filterPicker()">
+    <input class="picker-search" id="pickerSearch" type="text" placeholder="Buscar por nombre o categoría..." oninput="filterPicker()">
     <div class="picker-list" id="pickerList"></div>
   </div>
 </div>
@@ -1309,11 +1325,11 @@
     <div class="scanner-frame">
       <div class="scanner-line"></div>
     </div>
-    <div class="scanner-hint">バーコードまたはQRコードを枠内に合わせてください</div>
+    <div class="scanner-hint">Alinea el código de barras o QR dentro del marco</div>
   </div>
   <button class="scanner-close" onclick="closeScanner()">✕</button>
   <div class="scanner-manual">
-    <input type="text" id="manualBarcode" placeholder="手動入力..." inputmode="numeric">
+    <input type="text" id="manualBarcode" placeholder="Ingresar código..." inputmode="numeric">
     <button onclick="manualBarcodeSearch()">検索</button>
   </div>
 </div>
@@ -1366,10 +1382,10 @@ function updateOnlineStatus() {
   const badge = document.getElementById('syncBadge');
   if (!badge) return;
   if (isOnline) {
-    badge.textContent = '● オンライン';
+    badge.textContent = '● En línea';
     badge.classList.remove('offline');
   } else {
-    badge.textContent = '● オフライン';
+    badge.textContent = '● Sin conexión';
     badge.classList.add('offline');
   }
 }
@@ -1380,7 +1396,7 @@ function updateOnlineStatus() {
 function saveGasUrl() {
   const url = document.getElementById('gasUrlInput').value.trim();
   if (!url.startsWith('https://script.google.com/macros/s/')) {
-    document.getElementById('setupError').textContent = '正しいGASのURLを入力してください';
+    document.getElementById('setupError').textContent = 'Por favor ingresa una URL válida de GAS';
     return;
   }
   GAS_URL = url;
@@ -1441,32 +1457,27 @@ let selectedStaffId = null;
 let pinBuffer = '';
 
 function renderStaffList() {
-  const el = document.getElementById('staffList');
-  if (!staffList.length) {
-    el.innerHTML = '<div style="color:var(--text2);font-size:13px;grid-column:span 2;text-align:center;padding:12px;">スタッフが読み込めませんでした</div>';
-    return;
-  }
-  el.innerHTML = staffList.map(s => `
-    <div class="staff-btn" id="sbtn-${s['スタッフID']}" onclick="selectStaff('${s['スタッフID']}')">
-      ${s['名前']}
-      <div class="staff-role">${s['権限レベル']}</div>
-    </div>
-  `).join('');
+  const sel = document.getElementById('staffSelect');
+  sel.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
+  if (!staffList.length) return;
+  staffList.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s['スタッフID'];
+    opt.textContent = `${s['名前']} (${s['権限レベル']})`;
+    sel.appendChild(opt);
+  });
 }
 
-function selectStaff(id) {
-  selectedStaffId = id;
+function selectStaffFromDropdown(id) {
+  selectedStaffId = id || null;
   pinBuffer = '';
   updatePinDots();
-  document.querySelectorAll('.staff-btn').forEach(b => b.classList.remove('selected'));
-  const btn = document.getElementById(`sbtn-${id}`);
-  if (btn) btn.classList.add('selected');
   document.getElementById('loginError').textContent = '';
 }
 
 function pinInput(num) {
   if (!selectedStaffId) {
-    document.getElementById('loginError').textContent = 'まずスタッフを選択してください';
+    document.getElementById('loginError').textContent = 'Primero selecciona un empleado';
     return;
   }
   if (pinBuffer.length < 4) {
@@ -1495,7 +1506,7 @@ function pinEnter() {
     renderDiscountSection();
     updateSalesTab();
   } else {
-    document.getElementById('loginError').textContent = 'PINコードが違います';
+    document.getElementById('loginError').textContent = 'PIN incorrecto';
     pinBuffer = '';
     updatePinDots();
   }
@@ -1531,7 +1542,7 @@ function renderProductGrid(filter = '') {
      p['カテゴリー']?.includes(filter) || !filter)
   );
   if (!filtered.length) {
-    grid.innerHTML = '<div style="color:var(--text2);font-size:13px;grid-column:span 2;text-align:center;padding:24px;">商品が見つかりません</div>';
+    grid.innerHTML = '<div style="color:var(--text2);font-size:13px;grid-column:span 2;text-align:center;padding:24px;">No se encontraron productos</div>';
     return;
   }
   grid.innerHTML = filtered.map(p => {
@@ -1543,7 +1554,7 @@ function renderProductGrid(filter = '') {
       <div class="product-category">${p['カテゴリー'] || ''}</div>
       <div class="product-name">${p['商品名']}</div>
       <div class="product-price">MXN ${Number(p['販売価格 (MXN)']).toLocaleString()}</div>
-      <div class="product-stock">${stock === 0 ? '⚠ 在庫切れ' : stock <= warn ? `⚡ 残り${stock}個` : `在庫 ${stock}個`}</div>
+      <div class="product-stock">${stock === 0 ? '⚠ Sin stock' : stock <= warn ? `⚡ Quedan ${stock}` : `Stock: ${stock}`}</div>
     </div>`;
   }).join('');
 }
@@ -1580,7 +1591,7 @@ function renderCart() {
   const count = cart.reduce((s, c) => s + c.qty, 0);
   document.getElementById('cartCount').textContent = count ? `(${count})` : '';
   if (!cart.length) {
-    el.innerHTML = '<div class="cart-empty">商品を選択してください</div>';
+    el.innerHTML = '<div class="cart-empty">Selecciona un producto</div>';
     return;
   }
   el.innerHTML = cart.map(item => `
@@ -1638,7 +1649,7 @@ function renderDiscountSection() {
 
   if (!canDiscount) {
     toggle.classList.remove('allowed');
-    content.innerHTML = '<div class="no-discount-msg">このアカウントには割引権限がありません</div>';
+    content.innerHTML = '<div class="no-discount-msg">Esta cuenta no tiene permiso para dar descuentos</div>';
     return;
   }
 
@@ -1649,18 +1660,18 @@ function renderDiscountSection() {
   content.innerHTML = `
     <div style="width:100%">
       <div class="discount-type-btns">
-        <button class="disc-type-btn ${discountType === 'percent' ? 'active' : ''}" onclick="setDiscountType('percent')">% 割引</button>
-        <button class="disc-type-btn ${discountType === 'amount' ? 'active' : ''}" onclick="setDiscountType('amount')">金額 割引</button>
+        <button class="disc-type-btn ${discountType === 'percent' ? 'active' : ''}" onclick="setDiscountType('percent')">% Porcentaje</button>
+        <button class="disc-type-btn ${discountType === 'amount' ? 'active' : ''}" onclick="setDiscountType('amount')">$ Monto fijo</button>
       </div>
       <div class="discount-input-row">
         <input class="discount-input" id="discountInput" type="number" min="0"
           max="${discountType === 'percent' ? maxPct : maxAmt}"
-          placeholder="${discountType === 'percent' ? `最大 ${maxPct}%` : `最大 MXN ${maxAmt}`}"
+          placeholder="${discountType === 'percent' ? `Máx. ${maxPct}%` : `Máx. MXN ${maxAmt}`}"
           inputmode="decimal">
-        <button class="apply-disc-btn" onclick="applyDiscount()">適用</button>
+        <button class="apply-disc-btn" onclick="applyDiscount()">Aplicar</button>
       </div>
       <div style="font-size:11px;color:var(--text2);margin-top:6px;">
-        上限: ${discountType === 'percent' ? maxPct + '%' : 'MXN ' + maxAmt}
+        Límite: ${discountType === 'percent' ? maxPct + '%' : 'MXN ' + maxAmt}
       </div>
     </div>
   `;
@@ -1691,10 +1702,10 @@ function applyDiscount() {
   const maxAmt = Number(currentStaff['割引上限 (MXN)']) || 0;
 
   if (discountType === 'percent' && val > maxPct) {
-    alert(`割引上限は ${maxPct}% です`); return;
+    alert(`El límite de descuento es ${maxPct}%`); return;
   }
   if (discountType === 'amount' && val > maxAmt) {
-    alert(`割引上限は MXN ${maxAmt} です`); return;
+    alert(`El límite de descuento es MXN ${maxAmt}`); return;
   }
 
   discountValue = val;
@@ -1723,7 +1734,7 @@ function updateTotals() {
   if (discAmt > 0) {
     discRow.style.display = 'flex';
     document.getElementById('discountLabel').textContent =
-      discountType === 'percent' ? `割引 (${discountValue}%)` : '割引 (金額)';
+      discountType === 'percent' ? `Descuento (${discountValue}%)` : 'Descuento (fijo)';
     document.getElementById('discountDisplay').textContent = `- MXN ${discAmt.toLocaleString()}`;
   } else {
     discRow.style.display = 'none';
@@ -1817,9 +1828,9 @@ function showSuccess(total, discAmt, record) {
   `).join('');
 
   if (discAmt > 0) {
-    receiptHtml += `<div class="receipt-row" style="color:var(--accent3)"><span>割引</span><span>-MXN ${discAmt.toLocaleString()}</span></div>`;
+    receiptHtml += `<div class="receipt-row" style="color:var(--accent3)"><span>Descuento</span><span>-MXN ${discAmt.toLocaleString()}</span></div>`;
   }
-  receiptHtml += `<div class="receipt-row total"><span>合計</span><span>MXN ${total.toLocaleString()}</span></div>`;
+  receiptHtml += `<div class="receipt-row total"><span>Total</span><span>MXN ${total.toLocaleString()}</span></div>`;
 
   document.getElementById('modalReceipt').innerHTML = receiptHtml;
   document.getElementById('successModal').classList.add('open');
@@ -1869,7 +1880,7 @@ async function openScanner() {
           document.getElementById('productSearch').value = '';
           renderProductGrid();
         } else {
-          alert(`バーコード: ${code}\n商品が見つかりません`);
+          alert(`Código: ${code}\nProducto no encontrado`);
         }
       }
     });
@@ -1905,7 +1916,7 @@ function renderInventory(filter = '') {
     !filter || p['商品名']?.includes(filter) || p['カテゴリー']?.includes(filter)
   );
   if (!filtered.length) {
-    el.innerHTML = '<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px;">商品が見つかりません</div>';
+    el.innerHTML = '<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px;">No se encontraron productos</div>';
     return;
   }
   el.innerHTML = filtered.map(p => {
@@ -1917,7 +1928,7 @@ function renderInventory(filter = '') {
     <div class="inv-item ${stock === 0 ? 'out' : stock <= warn ? 'low' : ''}">
       <div class="inv-info">
         <div class="inv-name">${p['商品名']}</div>
-        <div class="inv-cat">${p['カテゴリー'] || ''} • 原価: MXN ${Number(p['移動平均原価 (MXN)'] || 0).toLocaleString()}</div>
+        <div class="inv-cat">${p['カテゴリー'] || ''} • Costo: MXN ${Number(p['移動平均原価 (MXN)'] || 0).toLocaleString()}</div>
       </div>
       <div>
         <div class="inv-stock-badge ${cls}">${stockLabel}</div>
@@ -1945,7 +1956,7 @@ function updateSalesTab() {
 
   const list = document.getElementById('salesList');
   if (!allSales.length) {
-    list.innerHTML = '<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px;">売上記録はありません</div>';
+    list.innerHTML = '<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px;">No hay ventas registradas</div>';
     return;
   }
   list.innerHTML = allSales.map(r => `
@@ -1960,7 +1971,7 @@ function updateSalesTab() {
       <div>
         <span class="sale-payment ${r.payment}">${r.payment}</span>
         <span style="font-size:12px;color:var(--text2);margin-left:6px;">${r.staff}</span>
-        ${r.discAmt > 0 ? `<span style="font-size:11px;color:var(--accent3);margin-left:6px;">割引 -MXN ${r.discAmt}</span>` : ''}
+        ${r.discAmt > 0 ? `<span style="font-size:11px;color:var(--accent3);margin-left:6px;">Desc. -MXN ${r.discAmt}</span>` : ''}
       </div>
     </div>
   `).join('');
@@ -2007,7 +2018,7 @@ function initReceivingTab() {
 function renderRecvProductList() {
   const el = document.getElementById('recvProductList');
   if (!recvProducts.length) {
-    el.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:12px;">商品を追加してください</div>';
+    el.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:12px;">Agrega productos al lote</div>';
     return;
   }
   el.innerHTML = recvProducts.map((item, i) => `
@@ -2018,19 +2029,19 @@ function renderRecvProductList() {
       </div>
       <div class="recv-product-fields">
         <div>
-          <div class="recv-mini-label">数量</div>
+          <div class="recv-mini-label">Cantidad</div>
           <input class="recv-mini-input" type="number" min="1" value="${item.qty}"
             oninput="updateRecvProduct(${i}, 'qty', this.value)" inputmode="numeric">
         </div>
         <div>
-          <div class="recv-mini-label">仕入単価 (JPY)</div>
+          <div class="recv-mini-label">Precio compra (JPY)</div>
           <input class="recv-mini-input" type="number" min="0" value="${item.unitPriceJpy || ''}"
-            placeholder="例: 1500" oninput="updateRecvProduct(${i}, 'unitPriceJpy', this.value)" inputmode="decimal">
+            placeholder="ej: 1500" oninput="updateRecvProduct(${i}, 'unitPriceJpy', this.value)" inputmode="decimal">
         </div>
         <div>
-          <div class="recv-mini-label">販売価格 (MXN)</div>
+          <div class="recv-mini-label">Precio venta (MXN)</div>
           <input class="recv-mini-input" type="number" min="0" value="${item.price || ''}"
-            placeholder="例: 500" oninput="updateRecvProduct(${i}, 'price', this.value)" inputmode="decimal">
+            placeholder="ej: 500" oninput="updateRecvProduct(${i}, 'price', this.value)" inputmode="decimal">
         </div>
       </div>
       <div class="recv-cost-preview" id="recvCostPreview${i}"></div>
@@ -2053,8 +2064,8 @@ function updateAllCostPreviews() {
     if (item.unitPriceJpy && rate) {
       const costMxn = item.unitPriceJpy * rate;
       const margin = item.price ? item.price - costMxn : null;
-      el.textContent = `原価: MXN ${costMxn.toFixed(2)} / 個` +
-        (margin !== null ? `　送料枠: MXN ${margin.toFixed(2)} / 個` : '');
+      el.textContent = `Costo: MXN ${costMxn.toFixed(2)} / ud.` +
+        (margin !== null ? `   Margen: MXN ${margin.toFixed(2)} / ud.` : '');
     } else {
       el.textContent = '';
     }
@@ -2079,7 +2090,7 @@ function updateRecvSummary() {
   const lotResult = shippingBudget - shipping + refund;
 
   document.getElementById('sumProductCount').textContent = recvProducts.length;
-  document.getElementById('sumTotalQty').textContent = `${totalQty} 個`;
+  document.getElementById('sumTotalQty').textContent = `${totalQty} uds.`;
   document.getElementById('sumCostTotal').textContent = `MXN ${costTotal.toFixed(0)}`;
   document.getElementById('sumShipping').textContent = `MXN ${shipping.toFixed(0)}`;
   document.getElementById('sumRefund').textContent = `MXN ${refund.toFixed(0)}`;
@@ -2124,7 +2135,7 @@ function renderPickerList(filter) {
     (!filter || p['商品名']?.includes(filter) || p['カテゴリー']?.includes(filter))
   );
   if (!filtered.length) {
-    el.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:24px;">商品が見つかりません</div>';
+    el.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:24px;">No se encontraron productos</div>';
     return;
   }
   el.innerHTML = filtered.map(p => `
@@ -2133,7 +2144,7 @@ function renderPickerList(filter) {
         <div class="picker-item-name">${p['商品名']}</div>
         <div class="picker-item-cat">${p['カテゴリー'] || ''}</div>
       </div>
-      <div class="picker-item-stock">在庫 ${p['現在庫数']}個</div>
+      <div class="picker-item-stock">Stock: ${p['現在庫数']}</div>
     </div>
   `).join('');
 }
@@ -2163,7 +2174,7 @@ async function submitReceiving() {
 
   const btn = document.getElementById('recvSubmitBtn');
   btn.disabled = true;
-  btn.textContent = '登録中...';
+  btn.textContent = 'Registrando...';
 
   const payload = {
     action: 'saveLot',
@@ -2216,7 +2227,7 @@ async function submitReceiving() {
   localStorage.setItem('exchangeRate', rate);
 
   if (success) {
-    alert(`✅ ロット ${lotId} を登録しました！\n在庫と移動平均原価が更新されました。`);
+    alert(`✅ Lote ${lotId} registrado con éxito.\nInventario y costo promedio actualizados.`);
     // Reset form
     recvProducts = [];
     renderRecvProductList();
@@ -2224,7 +2235,7 @@ async function submitReceiving() {
     renderInventory();
   }
 
-  btn.textContent = '入荷を登録する';
+  btn.textContent = 'REGISTRAR ENTRADA';
 }
 
 function saveOfflineLot(payload) {
