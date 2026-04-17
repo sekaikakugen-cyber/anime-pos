@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>Anime POS</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c28;
+      --border: #2a2a3d;
+      --accent: #ff4757;
+      --accent2: #ffa502;
+      --accent3: #2ed573;
+      --text: #f0f0f0;
+      --text2: #8888aa;
+      --cash: #2ed573;
+      --card: #1e90ff;
+      --bank: #ffa502;
+      --radius: 14px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ============ LOGIN SCREEN ============ */
+    #loginScreen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+    #loginScreen::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(255,71,87,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .login-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 6px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .login-logo span { color: var(--accent); }
+    .login-sub {
+      color: var(--text2);
+      font-size: 13px;
+      letter-spacing: 3px;
+      margin-bottom: 48px;
+    }
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .login-label {
+      font-size: 12px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .staff-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .staff-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 8px;
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .staff-btn:active, .staff-btn.selected {
+      border-color: var(--accent);
+      background: rgba(255,71,87,0.15);
+      color: var(--accent);
+    }
+    .staff-role {
+      font-size: 10px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+    .pin-display {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .pin-dot {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      transition: all 0.2s;
+    }
+    .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+    .pin-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .pin-key {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.1s;
+      text-align: center;
+    }
+    .pin-key:active { background: var(--border); transform: scale(0.95); }
+    .pin-key.del { font-size: 16px; color: var(--text2); }
+    .pin-key.enter {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .pin-key.enter:active { background: #cc2f3d; }
+    .login-error {
+      color: var(--accent);
+      font-size: 13px;
+      text-align: center;
+      margin-top: 12px;
+      min-height: 20px;
+    }
+
+    /* ============ SETUP SCREEN ============ */
+    #setupScreen {
+      min-height: 100vh;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 480px;
+    }
+    .setup-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+    }
+    .setup-desc { color: var(--text2); font-size: 13px; margin-bottom: 28px; line-height: 1.6; }
+    .setup-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 14px;
+      width: 100%;
+      font-family: 'Noto Sans JP', sans-serif;
+      margin-bottom: 16px;
+    }
+    .setup-input:focus { outline: none; border-color: var(--accent); }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      width: 100%;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+      transition: all 0.2s;
+    }
+    .btn-primary:active { transform: scale(0.98); background: #cc2f3d; }
+
+    /* ============ MAIN APP ============ */
+    #app { display: none; min-height: 100vh; flex-direction: column; }
+
+    /* Top bar */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 3px;
+    }
+    .topbar-logo span { color: var(--accent); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .sync-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(46,213,115,0.15);
+      color: var(--accent3);
+      border: 1px solid rgba(46,213,115,0.3);
+    }
+    .sync-badge.offline {
+      background: rgba(255,71,87,0.15);
+      color: var(--accent);
+      border-color: rgba(255,71,87,0.3);
+    }
+    .staff-name-badge {
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .logout-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: var(--text2);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Tab nav */
+    .tabnav {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 57px; z-index: 99;
+    }
+    .tab {
+      flex: 1;
+      padding: 14px 0;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text2);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+
+    /* ============ REGISTER TAB ============ */
+    .register-layout {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 16px;
+      gap: 16px;
+    }
+
+    /* Search & scan */
+    .search-bar {
+      display: flex;
+      gap: 10px;
+    }
+    .search-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    .search-input:focus { outline: none; border-color: var(--accent); }
+    .scan-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      width: 52px;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Product grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-card:active {
+      border-color: var(--accent);
+      transform: scale(0.97);
+    }
+    .product-card.low-stock { border-color: rgba(255,165,2,0.4); }
+    .product-card.out-of-stock { opacity: 0.5; pointer-events: none; }
+    .product-name {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+    .product-price {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      color: var(--accent2);
+      letter-spacing: 1px;
+    }
+    .product-stock {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+    .product-category {
+      position: absolute;
+      top: 8px; right: 8px;
+      font-size: 9px;
+      background: var(--surface2);
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: var(--text2);
+    }
+
+    /* Cart */
+    .cart-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .cart-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .cart-clear {
+      font-size: 12px;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .cart-items { padding: 8px 0; min-height: 80px; max-height: 200px; overflow-y: auto; }
+    .cart-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .cart-item-name { flex: 1; font-size: 13px; line-height: 1.3; }
+    .cart-qty-ctrl { display: flex; align-items: center; gap: 8px; }
+    .qty-btn {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .qty-btn:active { background: var(--border); }
+    .qty-num { font-size: 15px; font-weight: 700; width: 24px; text-align: center; }
+    .cart-item-price {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 18px;
+      color: var(--accent2);
+      min-width: 70px;
+      text-align: right;
+    }
+    .cart-remove {
+      background: none; border: none; color: var(--text2); font-size: 16px; cursor: pointer;
+      padding: 4px;
+    }
+    .cart-empty {
+      text-align: center;
+      padding: 24px;
+      color: var(--text2);
+      font-size: 13px;
+    }
+
+    /* Discount section */
+    .discount-section {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+    }
+    .discount-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text2);
+    }
+    .discount-toggle.allowed { color: var(--accent2); }
+    .discount-panel {
+      display: none;
+      margin-top: 12px;
+      gap: 10px;
+    }
+    .discount-panel.open { display: flex; }
+    .discount-type-btns { display: flex; gap: 8px; margin-bottom: 10px; }
+    .disc-type-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .disc-type-btn.active {
+      border-color: var(--accent2);
+      color: var(--accent2);
+      background: rgba(255,165,2,0.1);
+    }
+    .discount-input-row { display: flex; gap: 8px; align-items: center; }
+    .discount-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 16px;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    .discount-input:focus { outline: none; border-color: var(--accent2); }
+    .apply-disc-btn {
+      background: var(--accent2);
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #000;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .no-discount-msg {
+      color: var(--text2);
+      font-size: 12px;
+      padding: 8px 0;
+      font-style: italic;
+    }
+
+    /* Totals */
+    .totals-section {
+      border-top: 1px solid var(--border);
+      padding: 14px 16px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+    .total-row.discount { color: var(--accent3); }
+    .total-final {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .total-label { font-size: 14px; font-weight: 700; }
+    .total-amount {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px;
+      color: var(--accent2);
+      letter-spacing: 2px;
+    }
+
+    /* Payment */
+    .payment-section { padding: 14px 16px; border-top: 1px solid var(--border); }
+    .payment-label { font-size: 12px; color: var(--text2); letter-spacing: 2px; margin-bottom: 10px; }
+    .payment-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .pay-btn {
+      padding: 14px 4px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .pay-btn .pay-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+    .pay-btn.cash.selected { border-color: var(--cash); color: var(--cash); background: rgba(46,213,115,0.1); }
+    .pay-btn.card.selected { border-color: var(--card); color: var(--card); background: rgba(30,144,255,0.1); }
+    .pay-btn.bank.selected { border-color: var(--bank); color: var(--bank); background: rgba(255,165,2,0.1); }
+    .checkout-btn {
+      width: 100%;
+      background: var(--accent3);
+      border: none;
+      border-radius: 14px;
+      padding: 18px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #000;
+      cursor: pointer;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 2px;
+      transition: all 0.2s;
+    }
+    .checkout-btn:disabled { background: var(--border); color: var(--text2); cursor: not-allowed; }
+    .checkout-btn:not(:disabled):active { transform: scale(0.98); }
+
+    /* ============ SUCCESS MODAL ============ */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+    }
+    .modal-icon { font-size: 56px; margin-bottom: 16px; }
+    .modal-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+    }
+    .modal-amount {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+    .modal-sub { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+    .modal-receipt { background: var(--surface2); border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: left; }
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+    .receipt-row.total { color: var(--text); font-weight: 700; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
+    .modal-close {
+      width: 100%;
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    /* ============ SCANNER MODAL ============ */
+    .scanner-modal {
+      position: fixed; inset: 0;
+      background: #000;
+      display: none;
+      flex-direction: column;
+      z-index: 998;
+    }
+    .scanner-modal.open { display: flex; }
+    #scannerVideo { width: 100%; flex: 1; object-fit: cover; }
+    .scanner-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .scanner-frame {
+      width: 240px; height: 240px;
+      border: 2px solid var(--accent);
+      border-radius: 20px;
+      position: relative;
+    }
+    .scanner-frame::before, .scanner-frame::after {
+      content: '';
+      position: absolute;
+      width: 40px; height: 40px;
+      border-color: var(--accent);
+      border-style: solid;
+    }
+    .scanner-frame::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
+    .scanner-frame::after { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
+    .scanner-line {
+      position: absolute;
+      left: 0; right: 0; top: 50%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scan 2s infinite;
+    }
+    @keyframes scan {
+      0% { top: 10%; } 100% { top: 90%; }
+    }
+    .scanner-hint { color: white; margin-top: 24px; font-size: 14px; opacity: 0.8; }
+    .scanner-close {
+      position: absolute;
+      top: 48px; right: 20px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      width: 44px; height: 44px;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      pointer-events: all;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .scanner-manual {
+      position: absolute;
+      bottom: 48px;
+      pointer-events: all;
+      display: flex; gap: 10px; align-items: center;
+    }
+    .scanner-manual input {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: white;
+      font-size: 16px;
+      width: 200px;
+    }
+    .scanner-manual button {
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ============ INVENTORY TAB ============ */
+    .inventory-layout { padding: 16px; }
+    .inv-search {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: 'Noto Sans JP', sans-serif;
+      margin-bottom: 16px;
+    }
+    .inv-search:focus { outline: none; border-color: var(--accent); }
+    .inv-list { display: flex; flex-direction: column; gap: 8px; }
+    .inv-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .inv-item.low { border-color: rgba(255,165,2,0.5); }
+    .inv-item.out { border-color: rgba(255,71,87,0.5); }
+    .inv-info { flex: 1 }
+    .inv-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+    .inv-cat { font-size: 11px; color: var(--text2); }
+    .inv-stock-badge {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      min-width: 50px;
+      text-align: right;
+    }
+    .inv-stock-badge.ok { color: var(--accent3); }
+    .inv-stock-badge.low { color: var(--accent2); }
+    .inv-stock-badge.out { color: var(--accent); }
+    .inv-price { font-size: 13px; color: var(--text2); text-align: right; }
+
+    /* ============ SALES TAB ============ */
+    .sales-layout { padding: 16px; }
+    .sales-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .summary-label { font-size: 11px; color: var(--text2); letter-spacing: 1px; margin-bottom: 6px; }
+    .summary-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+    .summary-value.green { color: var(--accent3); }
+    .summary-value.yellow { color: var(--accent2); }
+    .summary-value.red { color: var(--accent); }
+    .sales-list { display: flex; flex-direction: column; gap: 8px; }
+    .sale-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .sale-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .sale-time { font-size: 12px; color: var(--text2); }
+    .sale-amount {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      color: var(--accent2);
+    }
+    .sale-detail { font-size: 12px; color: var(--text2); }
+    .sale-payment {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+    .sale-payment.現金 { background: rgba(46,213,115,0.15); color: var(--cash); }
+    .sale-payment.カード { background: rgba(30,144,255,0.15); color: var(--card); }
+    .sale-payment.銀行振込 { background: rgba(255,165,2,0.15); color: var(--bank); }
+    .offline-badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-left: 6px;
+      background: rgba(255,71,87,0.15);
+      color: var(--accent);
+    }
+
+    /* ============ RECEIVING TAB ============ */
+    .receiving-layout { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .recv-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .recv-section-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .recv-section-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .recv-field { display: flex; flex-direction: column; gap: 6px; }
+    .recv-label { font-size: 11px; color: var(--text2); letter-spacing: 1px; }
+    .recv-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 14px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: 'Noto Sans JP', sans-serif;
+      width: 100%;
+    }
+    .recv-input:focus { outline: none; border-color: var(--accent3); }
+    .recv-row { display: flex; gap: 10px; }
+    .recv-row .recv-field { flex: 1; }
+
+    /* Product rows in receiving */
+    .recv-product-list { display: flex; flex-direction: column; gap: 8px; }
+    .recv-product-row {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .recv-product-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .recv-product-name { flex: 1; font-size: 13px; font-weight: 700; }
+    .recv-product-remove {
+      background: none; border: none; color: var(--text2);
+      font-size: 18px; cursor: pointer; padding: 4px;
+    }
+    .recv-product-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .recv-mini-label { font-size: 10px; color: var(--text2); margin-bottom: 4px; }
+    .recv-mini-input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 10px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Noto Sans JP', sans-serif;
+      width: 100%;
+    }
+    .recv-mini-input:focus { outline: none; border-color: var(--accent3); }
+    .recv-cost-preview {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--accent3);
+      text-align: right;
+    }
+
+    /* Add product button */
+    .recv-add-btn {
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      color: var(--text2);
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      width: 100%;
+      font-family: 'Noto Sans JP', sans-serif;
+      transition: all 0.2s;
+    }
+    .recv-add-btn:active { border-color: var(--accent3); color: var(--accent3); }
+
+    /* Product picker modal */
+    .product-picker {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: flex-end;
+      z-index: 997;
+    }
+    .product-picker.open { display: flex; }
+    .product-picker-sheet {
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      padding: 20px;
+      width: 100%;
+      max-height: 70vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .picker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .picker-title { font-weight: 700; font-size: 16px; }
+    .picker-close {
+      background: none; border: none; color: var(--text2);
+      font-size: 22px; cursor: pointer;
+    }
+    .picker-search {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Noto Sans JP', sans-serif;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .picker-search:focus { outline: none; border-color: var(--accent3); }
+    .picker-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .picker-item {
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: var(--surface2);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .picker-item:active { border-color: var(--accent3); }
+    .picker-item-name { font-size: 14px; font-weight: 700; }
+    .picker-item-cat { font-size: 11px; color: var(--text2); margin-top: 2px; }
+    .picker-item-stock { font-size: 13px; color: var(--text2); }
+
+    /* Lot summary */
+    .recv-summary {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .recv-sum-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text2);
+    }
+    .recv-sum-row.highlight { color: var(--text); font-weight: 700; }
+    .recv-sum-row.pool-pos { color: var(--accent3); font-weight: 700; }
+    .recv-sum-row.pool-neg { color: var(--accent); font-weight: 700; }
+
+    .recv-submit-btn {
+      width: 100%;
+      background: var(--accent3);
+      border: none;
+      border-radius: 14px;
+      padding: 18px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #000;
+      cursor: pointer;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 2px;
+      transition: all 0.2s;
+    }
+    .recv-submit-btn:disabled { background: var(--border); color: var(--text2); cursor: not-allowed; }
+    .recv-submit-btn:not(:disabled):active { transform: scale(0.98); }
+
+    /* Utility */
+    .hidden { display: none !important; }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text2);
+    }
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ===== SETUP SCREEN ===== -->
+<div id="setupScreen">
+  <div class="setup-card">
+    <div class="setup-title">初期設定</div>
+    <div class="setup-desc">GASのウェブアプリURLを入力してください。<br>このURLはスプレッドシートのデータに接続するために使用されます。</div>
+    <input class="setup-input" id="gasUrlInput" type="url" placeholder="https://script.google.com/macros/s/..." autocomplete="off">
+    <div id="setupError" style="color:var(--accent);font-size:13px;margin-bottom:12px;"></div>
+    <button class="btn-primary" onclick="saveGasUrl()">接続して開始</button>
+  </div>
+</div>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen" class="hidden">
+  <div class="login-logo">ANIME<span>POS</span></div>
+  <div class="login-sub">MERCADO SYSTEM</div>
+  <div class="login-card">
+    <div class="login-label">スタッフを選択</div>
+    <div class="staff-list" id="staffList">
+      <div class="loading">読み込み中</div>
+    </div>
+    <div class="login-label">PINコードを入力</div>
+    <div class="pin-display" id="pinDisplay">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="pin-pad">
+      <div class="pin-key" onclick="pinInput('1')">1</div>
+      <div class="pin-key" onclick="pinInput('2')">2</div>
+      <div class="pin-key" onclick="pinInput('3')">3</div>
+      <div class="pin-key" onclick="pinInput('4')">4</div>
+      <div class="pin-key" onclick="pinInput('5')">5</div>
+      <div class="pin-key" onclick="pinInput('6')">6</div>
+      <div class="pin-key" onclick="pinInput('7')">7</div>
+      <div class="pin-key" onclick="pinInput('8')">8</div>
+      <div class="pin-key" onclick="pinInput('9')">9</div>
+      <div class="pin-key del" onclick="pinDelete()">⌫</div>
+      <div class="pin-key" onclick="pinInput('0')">0</div>
+      <div class="pin-key enter" onclick="pinEnter()">→</div>
+    </div>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-logo">ANIME<span>POS</span></div>
+    <div class="topbar-right">
+      <div class="sync-badge" id="syncBadge">● オンライン</div>
+      <div class="staff-name-badge" id="currentStaffBadge"></div>
+      <button class="logout-btn" onclick="logout()">ログアウト</button>
+    </div>
+  </div>
+
+  <!-- Tab nav -->
+  <div class="tabnav">
+    <div class="tab active" onclick="switchTab('register')" id="tab-register">
+      <span class="tab-icon">🛒</span>レジ
+    </div>
+    <div class="tab" onclick="switchTab('inventory')" id="tab-inventory">
+      <span class="tab-icon">📦</span>在庫
+    </div>
+    <div class="tab" onclick="switchTab('sales')" id="tab-sales">
+      <span class="tab-icon">📊</span>売上
+    </div>
+    <div class="tab" onclick="switchTab('receiving')" id="tab-receiving">
+      <span class="tab-icon">📥</span>入荷
+    </div>
+  </div>
+
+  <!-- ===== REGISTER TAB ===== -->
+  <div id="registerTab">
+    <div class="register-layout">
+      <!-- Search & Scan -->
+      <div class="search-bar">
+        <input class="search-input" id="productSearch" type="text" placeholder="商品名・バーコードで検索..." oninput="filterProducts()">
+        <button class="scan-btn" onclick="openScanner()">📷</button>
+      </div>
+
+      <!-- Product Grid -->
+      <div class="product-grid" id="productGrid">
+        <div class="loading">商品を読み込み中</div>
+      </div>
+
+      <!-- Cart -->
+      <div class="cart-section">
+        <div class="cart-header">
+          <span>🛒 カート <span id="cartCount" style="color:var(--accent)"></span></span>
+          <button class="cart-clear" onclick="clearCart()">クリア</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+          <div class="cart-empty">商品を選択してください</div>
+        </div>
+
+        <!-- Discount -->
+        <div class="discount-section" id="discountSection">
+          <div class="discount-toggle" id="discountToggle" onclick="toggleDiscount()">
+            <span id="discountToggleLabel">🏷️ 割引を追加</span>
+            <span id="discountChevron">▼</span>
+          </div>
+          <div class="discount-panel" id="discountPanel">
+            <div id="discountContent"></div>
+          </div>
+        </div>
+
+        <!-- Totals -->
+        <div class="totals-section">
+          <div class="total-row">
+            <span>小計</span>
+            <span id="subtotalDisplay">MXN 0</span>
+          </div>
+          <div class="total-row discount" id="discountRow" style="display:none">
+            <span id="discountLabel">割引</span>
+            <span id="discountDisplay"></span>
+          </div>
+          <div class="total-final">
+            <span class="total-label">合計</span>
+            <span class="total-amount" id="totalDisplay">MXN 0</span>
+          </div>
+        </div>
+
+        <!-- Payment -->
+        <div class="payment-section">
+          <div class="payment-label">決済方法</div>
+          <div class="payment-btns">
+            <button class="pay-btn cash" onclick="selectPayment('現金')">
+              <span class="pay-icon">💵</span>現金
+            </button>
+            <button class="pay-btn card" onclick="selectPayment('カード')">
+              <span class="pay-icon">💳</span>カード
+            </button>
+            <button class="pay-btn bank" onclick="selectPayment('銀行振込')">
+              <span class="pay-icon">🏦</span>銀行振込
+            </button>
+          </div>
+          <button class="checkout-btn" id="checkoutBtn" onclick="checkout()" disabled>
+            会計する
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INVENTORY TAB ===== -->
+  <div id="inventoryTab" class="hidden">
+    <div class="inventory-layout">
+      <input class="inv-search" id="invSearch" type="text" placeholder="商品名・カテゴリーで検索..." oninput="filterInventory()">
+      <div class="inv-list" id="invList">
+        <div class="loading">在庫を読み込み中</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SALES TAB ===== -->
+  <div id="salesTab" class="hidden">
+    <div class="sales-layout">
+      <div class="sales-summary" id="salesSummary">
+        <div class="summary-card">
+          <div class="summary-label">本日の売上</div>
+          <div class="summary-value green" id="todaySales">MXN 0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">取引件数</div>
+          <div class="summary-value yellow" id="todayCount">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">割引総額</div>
+          <div class="summary-value red" id="todayDiscount">MXN 0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">未同期</div>
+          <div class="summary-value" id="unsyncedCount" style="color:var(--text2)">0</div>
+        </div>
+      </div>
+      <div class="sales-list" id="salesList">
+        <div style="text-align:center;color:var(--text2);padding:24px;font-size:13px;">売上記録はありません</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- ===== RECEIVING TAB ===== -->
+  <div id="receivingTab" class="hidden">
+    <div class="receiving-layout">
+
+      <!-- Access denied message -->
+      <div id="recvAccessDenied" class="hidden">
+        <div style="text-align:center;padding:48px 24px;color:var(--text2);">
+          <div style="font-size:48px;margin-bottom:16px;">🔒</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:8px;">アクセス権限がありません</div>
+          <div style="font-size:13px;">入荷管理はオーナーまたはシニアスタッフのみ使用できます</div>
+        </div>
+      </div>
+
+      <div id="recvForm">
+        <!-- ロット情報 -->
+        <div class="recv-section">
+          <div class="recv-section-header">📋 ロット情報</div>
+          <div class="recv-section-body">
+            <div class="recv-row">
+              <div class="recv-field">
+                <div class="recv-label">ロットID</div>
+                <input class="recv-input" id="recvLotId" type="text" placeholder="LOT004" oninput="updateRecvSummary()">
+              </div>
+              <div class="recv-field">
+                <div class="recv-label">仕入れ日</div>
+                <input class="recv-input" id="recvDate" type="date" oninput="updateRecvSummary()">
+              </div>
+            </div>
+            <div class="recv-row">
+              <div class="recv-field">
+                <div class="recv-label">為替レート (JPY→MXN)</div>
+                <input class="recv-input" id="recvRate" type="number" step="0.001" placeholder="0.130" oninput="updateRecvSummary()">
+              </div>
+              <div class="recv-field">
+                <div class="recv-label">実際の送料+税 (MXN)</div>
+                <input class="recv-input" id="recvShipping" type="number" placeholder="2000" oninput="updateRecvSummary()">
+              </div>
+            </div>
+            <div class="recv-field">
+              <div class="recv-label">税還付額 (MXN) ※ある場合のみ</div>
+              <input class="recv-input" id="recvRefund" type="number" placeholder="0" oninput="updateRecvSummary()">
+            </div>
+          </div>
+        </div>
+
+        <!-- 商品リスト -->
+        <div class="recv-section">
+          <div class="recv-section-header">📦 入荷商品</div>
+          <div class="recv-section-body">
+            <div class="recv-product-list" id="recvProductList"></div>
+            <button class="recv-add-btn" onclick="openProductPicker()">＋ 商品を追加</button>
+          </div>
+        </div>
+
+        <!-- サマリー -->
+        <div class="recv-section">
+          <div class="recv-section-header">💰 コスト計算</div>
+          <div class="recv-section-body">
+            <div class="recv-summary" id="recvSummary">
+              <div class="recv-sum-row"><span>商品数（種類）</span><span id="sumProductCount">0</span></div>
+              <div class="recv-sum-row"><span>総入荷数量</span><span id="sumTotalQty">0 個</span></div>
+              <div class="recv-sum-row"><span>仕入れ原価合計 (MXN)</span><span id="sumCostTotal">MXN 0</span></div>
+              <div class="recv-sum-row"><span>実際の送料+税</span><span id="sumShipping">MXN 0</span></div>
+              <div class="recv-sum-row"><span>税還付額</span><span id="sumRefund" style="color:var(--accent3)">MXN 0</span></div>
+              <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
+              <div class="recv-sum-row highlight"><span>販売価格合計 (MXN)</span><span id="sumSaleTotal">MXN 0</span></div>
+              <div class="recv-sum-row highlight"><span>送料枠合計 (MXN)</span><span id="sumShippingBudget">MXN 0</span></div>
+              <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
+              <div class="recv-sum-row" id="sumPoolRow"><span>このロット損益</span><span id="sumPoolResult">MXN 0</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--text2);line-height:1.6;">
+              ※ 送料枠 = 販売価格合計 − 仕入れ原価合計<br>
+              ※ ロット損益 = 送料枠 − 実際の送料+税 + 税還付
+            </div>
+          </div>
+        </div>
+
+        <!-- 登録ボタン -->
+        <button class="recv-submit-btn" id="recvSubmitBtn" onclick="submitReceiving()" disabled>
+          入荷を登録する
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+<div class="modal-overlay" id="successModal">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">会計完了</div>
+    <div class="modal-amount" id="modalAmount"></div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div class="modal-receipt" id="modalReceipt"></div>
+    <button class="modal-close" onclick="closeModal()">次の会計へ</button>
+  </div>
+</div>
+
+<!-- ===== PRODUCT PICKER MODAL ===== -->
+<div class="product-picker" id="productPicker">
+  <div class="product-picker-sheet">
+    <div class="picker-header">
+      <div class="picker-title">商品を選択</div>
+      <button class="picker-close" onclick="closeProductPicker()">✕</button>
+    </div>
+    <input class="picker-search" id="pickerSearch" type="text" placeholder="商品名・カテゴリーで検索..." oninput="filterPicker()">
+    <div class="picker-list" id="pickerList"></div>
+  </div>
+</div>
+
+<!-- ===== SCANNER MODAL ===== -->
+<div class="scanner-modal" id="scannerModal">
+  <video id="scannerVideo" autoplay playsinline muted></video>
+  <div class="scanner-overlay">
+    <div class="scanner-frame">
+      <div class="scanner-line"></div>
+    </div>
+    <div class="scanner-hint">バーコードまたはQRコードを枠内に合わせてください</div>
+  </div>
+  <button class="scanner-close" onclick="closeScanner()">✕</button>
+  <div class="scanner-manual">
+    <input type="text" id="manualBarcode" placeholder="手動入力..." inputmode="numeric">
+    <button onclick="manualBarcodeSearch()">検索</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let GAS_URL = localStorage.getItem('gasUrl') || '';
+let products = [];
+let staffList = [];
+let currentStaff = null;
+let cart = [];
+let selectedPayment = null;
+let discountType = 'percent'; // 'percent' | 'amount'
+let discountValue = 0;
+let discountApplied = false;
+let todaySales = [];
+let offlineSales = JSON.parse(localStorage.getItem('offlineSales') || '[]');
+let isOnline = navigator.onLine;
+let codeReader = null;
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', () => {
+  if (!GAS_URL) {
+    showScreen('setup');
+  } else {
+    showScreen('login');
+    loadData();
+  }
+  updateOnlineStatus();
+});
+
+window.addEventListener('online', () => { isOnline = true; updateOnlineStatus(); syncOffline(); });
+window.addEventListener('offline', () => { isOnline = false; updateOnlineStatus(); });
+
+function showScreen(screen) {
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').style.display = 'none';
+  if (screen === 'setup') document.getElementById('setupScreen').classList.remove('hidden');
+  else if (screen === 'login') document.getElementById('loginScreen').classList.remove('hidden');
+  else if (screen === 'app') document.getElementById('app').style.display = 'flex';
+}
+
+function updateOnlineStatus() {
+  const badge = document.getElementById('syncBadge');
+  if (!badge) return;
+  if (isOnline) {
+    badge.textContent = '● オンライン';
+    badge.classList.remove('offline');
+  } else {
+    badge.textContent = '● オフライン';
+    badge.classList.add('offline');
+  }
+}
+
+// ============================================================
+// SETUP
+// ============================================================
+function saveGasUrl() {
+  const url = document.getElementById('gasUrlInput').value.trim();
+  if (!url.startsWith('https://script.google.com/macros/s/')) {
+    document.getElementById('setupError').textContent = '正しいGASのURLを入力してください';
+    return;
+  }
+  GAS_URL = url;
+  localStorage.setItem('gasUrl', url);
+  showScreen('login');
+  loadData();
+}
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+async function loadData() {
+  try {
+    await Promise.all([loadProducts(), loadStaff()]);
+  } catch(e) {
+    console.error('Data load failed:', e);
+  }
+}
+
+async function loadProducts() {
+  try {
+    const res = await fetch(`${GAS_URL}?action=getProducts`);
+    const data = await res.json();
+    if (data.products) {
+      products = data.products;
+      renderProductGrid();
+      renderInventory();
+    }
+  } catch(e) {
+    console.warn('Products load failed, using cached');
+    const cached = localStorage.getItem('cachedProducts');
+    if (cached) products = JSON.parse(cached);
+    renderProductGrid();
+    renderInventory();
+  }
+  if (products.length) localStorage.setItem('cachedProducts', JSON.stringify(products));
+}
+
+async function loadStaff() {
+  try {
+    const res = await fetch(`${GAS_URL}?action=getStaff`);
+    const data = await res.json();
+    if (data.staff) {
+      staffList = data.staff;
+      localStorage.setItem('cachedStaff', JSON.stringify(staffList));
+    }
+  } catch(e) {
+    const cached = localStorage.getItem('cachedStaff');
+    if (cached) staffList = JSON.parse(cached);
+  }
+  renderStaffList();
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+let selectedStaffId = null;
+let pinBuffer = '';
+
+function renderStaffList() {
+  const el = document.getElementById('staffList');
+  if (!staffList.length) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:13px;grid-column:span 2;text-align:center;padding:12px;">スタッフが読み込めませんでした</div>';
+    return;
+  }
+  el.innerHTML = staffList.map(s => `
+    <div class="staff-btn" id="sbtn-${s['スタッフID']}" onclick="selectStaff('${s['スタッフID']}')">
+      ${s['名前']}
+      <div class="staff-role">${s['権限レベル']}</div>
+    </div>
+  `).join('');
+}
+
+function selectStaff(id) {
+  selectedStaffId = id;
+  pinBuffer = '';
+  updatePinDots();
+  document.querySelectorAll('.staff-btn').forEach(b => b.classList.remove('selected'));
+  const btn = document.getElementById(`sbtn-${id}`);
+  if (btn) btn.classList.add('selected');
+  document.getElementById('loginError').textContent = '';
+}
+
+function pinInput(num) {
+  if (!selectedStaffId) {
+    document.getElementById('loginError').textContent = 'まずスタッフを選択してください';
+    return;
+  }
+  if (pinBuffer.length < 4) {
+    pinBuffer += num;
+    updatePinDots();
+    if (pinBuffer.length === 4) setTimeout(pinEnter, 200);
+  }
+}
+
+function pinDelete() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+}
+
+function pinEnter() {
+  if (!selectedStaffId) return;
+  const staff = staffList.find(s => s['スタッフID'] === selectedStaffId);
+  if (!staff) return;
+  if (String(staff['PINコード']) === pinBuffer) {
+    currentStaff = staff;
+    pinBuffer = '';
+    updatePinDots();
+    showScreen('app');
+    document.getElementById('currentStaffBadge').textContent = staff['名前'];
+    renderProductGrid();
+    renderDiscountSection();
+    updateSalesTab();
+  } else {
+    document.getElementById('loginError').textContent = 'PINコードが違います';
+    pinBuffer = '';
+    updatePinDots();
+  }
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot${i}`);
+    dot.classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+
+function logout() {
+  currentStaff = null;
+  selectedStaffId = null;
+  pinBuffer = '';
+  cart = [];
+  selectedPayment = null;
+  discountApplied = false;
+  discountValue = 0;
+  updatePinDots();
+  showScreen('login');
+}
+
+// ============================================================
+// REGISTER - PRODUCTS
+// ============================================================
+function renderProductGrid(filter = '') {
+  const grid = document.getElementById('productGrid');
+  const filtered = products.filter(p =>
+    p['状態'] === '販売中' &&
+    (p['商品名']?.includes(filter) || p['バーコード / QRコード']?.includes(filter) ||
+     p['カテゴリー']?.includes(filter) || !filter)
+  );
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="color:var(--text2);font-size:13px;grid-column:span 2;text-align:center;padding:24px;">商品が見つかりません</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(p => {
+    const stock = Number(p['現在庫数']);
+    const warn = Number(p['警告在庫数']);
+    const cls = stock === 0 ? 'out-of-stock' : stock <= warn ? 'low-stock' : '';
+    return `
+    <div class="product-card ${cls}" onclick="addToCart('${p['商品ID']}')">
+      <div class="product-category">${p['カテゴリー'] || ''}</div>
+      <div class="product-name">${p['商品名']}</div>
+      <div class="product-price">MXN ${Number(p['販売価格 (MXN)']).toLocaleString()}</div>
+      <div class="product-stock">${stock === 0 ? '⚠ 在庫切れ' : stock <= warn ? `⚡ 残り${stock}個` : `在庫 ${stock}個`}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterProducts() {
+  renderProductGrid(document.getElementById('productSearch').value.trim());
+}
+
+function addToCart(productId) {
+  const product = products.find(p => p['商品ID'] === productId);
+  if (!product) return;
+  const existing = cart.find(c => c.productId === productId);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({
+      productId,
+      name: product['商品名'],
+      price: Number(product['販売価格 (MXN)']),
+      qty: 1
+    });
+  }
+  discountApplied = false;
+  discountValue = 0;
+  renderCart();
+  updateTotals();
+}
+
+// ============================================================
+// CART
+// ============================================================
+function renderCart() {
+  const el = document.getElementById('cartItems');
+  const count = cart.reduce((s, c) => s + c.qty, 0);
+  document.getElementById('cartCount').textContent = count ? `(${count})` : '';
+  if (!cart.length) {
+    el.innerHTML = '<div class="cart-empty">商品を選択してください</div>';
+    return;
+  }
+  el.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-name">${item.name}</div>
+      <div class="cart-qty-ctrl">
+        <button class="qty-btn" onclick="changeQty('${item.productId}', -1)">−</button>
+        <span class="qty-num">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty('${item.productId}', 1)">+</button>
+      </div>
+      <div class="cart-item-price">MXN ${(item.price * item.qty).toLocaleString()}</div>
+      <button class="cart-remove" onclick="removeFromCart('${item.productId}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function changeQty(productId, delta) {
+  const item = cart.find(c => c.productId === productId);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(c => c.productId !== productId);
+  discountApplied = false;
+  discountValue = 0;
+  renderCart();
+  updateTotals();
+}
+
+function removeFromCart(productId) {
+  cart = cart.filter(c => c.productId !== productId);
+  discountApplied = false;
+  discountValue = 0;
+  renderCart();
+  updateTotals();
+}
+
+function clearCart() {
+  cart = [];
+  discountApplied = false;
+  discountValue = 0;
+  selectedPayment = null;
+  document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('selected'));
+  renderCart();
+  updateTotals();
+  document.getElementById('checkoutBtn').disabled = true;
+}
+
+// ============================================================
+// DISCOUNT
+// ============================================================
+function renderDiscountSection() {
+  if (!currentStaff) return;
+  const canDiscount = currentStaff['割引権限'] === 'あり';
+  const toggle = document.getElementById('discountToggle');
+  const content = document.getElementById('discountContent');
+
+  if (!canDiscount) {
+    toggle.classList.remove('allowed');
+    content.innerHTML = '<div class="no-discount-msg">このアカウントには割引権限がありません</div>';
+    return;
+  }
+
+  toggle.classList.add('allowed');
+  const maxPct = Number(currentStaff['割引上限 (%)']) || 0;
+  const maxAmt = Number(currentStaff['割引上限 (MXN)']) || 0;
+
+  content.innerHTML = `
+    <div style="width:100%">
+      <div class="discount-type-btns">
+        <button class="disc-type-btn ${discountType === 'percent' ? 'active' : ''}" onclick="setDiscountType('percent')">% 割引</button>
+        <button class="disc-type-btn ${discountType === 'amount' ? 'active' : ''}" onclick="setDiscountType('amount')">金額 割引</button>
+      </div>
+      <div class="discount-input-row">
+        <input class="discount-input" id="discountInput" type="number" min="0"
+          max="${discountType === 'percent' ? maxPct : maxAmt}"
+          placeholder="${discountType === 'percent' ? `最大 ${maxPct}%` : `最大 MXN ${maxAmt}`}"
+          inputmode="decimal">
+        <button class="apply-disc-btn" onclick="applyDiscount()">適用</button>
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-top:6px;">
+        上限: ${discountType === 'percent' ? maxPct + '%' : 'MXN ' + maxAmt}
+      </div>
+    </div>
+  `;
+}
+
+function toggleDiscount() {
+  const panel = document.getElementById('discountPanel');
+  const chevron = document.getElementById('discountChevron');
+  panel.classList.toggle('open');
+  chevron.textContent = panel.classList.contains('open') ? '▲' : '▼';
+  renderDiscountSection();
+}
+
+function setDiscountType(type) {
+  discountType = type;
+  discountApplied = false;
+  discountValue = 0;
+  renderDiscountSection();
+  updateTotals();
+}
+
+function applyDiscount() {
+  const input = document.getElementById('discountInput');
+  const val = parseFloat(input.value);
+  if (isNaN(val) || val <= 0) return;
+
+  const maxPct = Number(currentStaff['割引上限 (%)']) || 0;
+  const maxAmt = Number(currentStaff['割引上限 (MXN)']) || 0;
+
+  if (discountType === 'percent' && val > maxPct) {
+    alert(`割引上限は ${maxPct}% です`); return;
+  }
+  if (discountType === 'amount' && val > maxAmt) {
+    alert(`割引上限は MXN ${maxAmt} です`); return;
+  }
+
+  discountValue = val;
+  discountApplied = true;
+  updateTotals();
+}
+
+function getDiscountAmount(subtotal) {
+  if (!discountApplied || discountValue <= 0) return 0;
+  if (discountType === 'percent') return Math.round(subtotal * discountValue / 100);
+  return Math.min(discountValue, subtotal);
+}
+
+// ============================================================
+// TOTALS
+// ============================================================
+function updateTotals() {
+  const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const discAmt = getDiscountAmount(subtotal);
+  const total = subtotal - discAmt;
+
+  document.getElementById('subtotalDisplay').textContent = `MXN ${subtotal.toLocaleString()}`;
+  document.getElementById('totalDisplay').textContent = `MXN ${total.toLocaleString()}`;
+
+  const discRow = document.getElementById('discountRow');
+  if (discAmt > 0) {
+    discRow.style.display = 'flex';
+    document.getElementById('discountLabel').textContent =
+      discountType === 'percent' ? `割引 (${discountValue}%)` : '割引 (金額)';
+    document.getElementById('discountDisplay').textContent = `- MXN ${discAmt.toLocaleString()}`;
+  } else {
+    discRow.style.display = 'none';
+  }
+
+  const canCheckout = cart.length > 0 && selectedPayment;
+  document.getElementById('checkoutBtn').disabled = !canCheckout;
+}
+
+// ============================================================
+// PAYMENT
+// ============================================================
+function selectPayment(method) {
+  selectedPayment = method;
+  document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('selected'));
+  const map = {'現金': 'cash', 'カード': 'card', '銀行振込': 'bank'};
+  document.querySelector(`.pay-btn.${map[method]}`).classList.add('selected');
+  updateTotals();
+}
+
+// ============================================================
+// CHECKOUT
+// ============================================================
+async function checkout() {
+  if (!cart.length || !selectedPayment) return;
+
+  const subtotal = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  const discAmt = getDiscountAmount(subtotal);
+  const total = subtotal - discAmt;
+  const txnId = 'TXN' + Date.now();
+  const datetime = new Date().toLocaleString('ja-JP');
+
+  const sales = cart.map(item => ({
+    transactionId: txnId,
+    datetime,
+    staffId: currentStaff['スタッフID'],
+    staffName: currentStaff['名前'],
+    productId: item.productId,
+    productName: item.name,
+    quantity: item.qty,
+    unitPrice: item.price,
+    subtotal: item.price * item.qty,
+    discountType: discountApplied ? (discountType === 'percent' ? 'パーセント' : '金額') : 'なし',
+    discountValue: discountApplied ? discountValue : 0,
+    discountAmount: discAmt,
+    total: item === cart[cart.length - 1] ? total : item.price * item.qty,
+    paymentMethod: selectedPayment,
+    memo: ''
+  }));
+
+  // Save locally first
+  const saleRecord = { txnId, datetime, items: cart, subtotal, discAmt, total, payment: selectedPayment, staff: currentStaff['名前'] };
+  todaySales.unshift(saleRecord);
+
+  if (isOnline) {
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'saveSale', sales })
+      });
+    } catch(e) {
+      offlineSales.push(...sales);
+      localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
+    }
+  } else {
+    offlineSales.push(...sales);
+    localStorage.setItem('offlineSales', JSON.stringify(offlineSales));
+  }
+
+  showSuccess(total, discAmt, saleRecord);
+  clearCart();
+  updateSalesTab();
+
+  // Update local stock
+  cart.forEach(item => {
+    const p = products.find(pr => pr['商品ID'] === item.productId);
+    if (p) p['現在庫数'] = Number(p['現在庫数']) - item.qty;
+  });
+  renderInventory();
+}
+
+function showSuccess(total, discAmt, record) {
+  document.getElementById('modalAmount').textContent = `MXN ${total.toLocaleString()}`;
+  document.getElementById('modalSub').textContent = `${record.payment} • ${record.staff}`;
+
+  let receiptHtml = record.items.map(item => `
+    <div class="receipt-row">
+      <span>${item.name} ×${item.qty}</span>
+      <span>MXN ${(item.price * item.qty).toLocaleString()}</span>
+    </div>
+  `).join('');
+
+  if (discAmt > 0) {
+    receiptHtml += `<div class="receipt-row" style="color:var(--accent3)"><span>割引</span><span>-MXN ${discAmt.toLocaleString()}</span></div>`;
+  }
+  receiptHtml += `<div class="receipt-row total"><span>合計</span><span>MXN ${total.toLocaleString()}</span></div>`;
+
+  document.getElementById('modalReceipt').innerHTML = receiptHtml;
+  document.getElementById('successModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('successModal').classList.remove('open');
+}
+
+// ============================================================
+// OFFLINE SYNC
+// ============================================================
+async function syncOffline() {
+  if (!offlineSales.length || !isOnline) return;
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'syncOfflineSales', sales: offlineSales })
+    });
+    offlineSales = [];
+    localStorage.setItem('offlineSales', JSON.stringify([]));
+    updateSalesTab();
+  } catch(e) {
+    console.warn('Sync failed, will retry');
+  }
+}
+
+// Auto sync every 60s
+setInterval(() => { if (isOnline) syncOffline(); }, 60000);
+
+// ============================================================
+// SCANNER
+// ============================================================
+async function openScanner() {
+  document.getElementById('scannerModal').classList.add('open');
+  try {
+    codeReader = new ZXing.BrowserMultiFormatReader();
+    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+    const deviceId = devices[devices.length - 1]?.deviceId; // back camera
+    await codeReader.decodeFromVideoDevice(deviceId, 'scannerVideo', (result, err) => {
+      if (result) {
+        const code = result.getText();
+        closeScanner();
+        const product = products.find(p => p['バーコード / QRコード'] === code);
+        if (product) {
+          addToCart(product['商品ID']);
+          document.getElementById('productSearch').value = '';
+          renderProductGrid();
+        } else {
+          alert(`バーコード: ${code}\n商品が見つかりません`);
+        }
+      }
+    });
+  } catch(e) {
+    console.warn('Scanner error:', e);
+  }
+}
+
+function closeScanner() {
+  if (codeReader) { codeReader.reset(); codeReader = null; }
+  document.getElementById('scannerModal').classList.remove('open');
+}
+
+function manualBarcodeSearch() {
+  const code = document.getElementById('manualBarcode').value.trim();
+  if (!code) return;
+  closeScanner();
+  const product = products.find(p => p['バーコード / QRコード'] === code);
+  if (product) {
+    addToCart(product['商品ID']);
+  } else {
+    document.getElementById('productSearch').value = code;
+    filterProducts();
+  }
+}
+
+// ============================================================
+// INVENTORY TAB
+// ============================================================
+function renderInventory(filter = '') {
+  const el = document.getElementById('invList');
+  const filtered = products.filter(p =>
+    !filter || p['商品名']?.includes(filter) || p['カテゴリー']?.includes(filter)
+  );
+  if (!filtered.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px;">商品が見つかりません</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(p => {
+    const stock = Number(p['現在庫数']);
+    const warn = Number(p['警告在庫数']);
+    const cls = stock === 0 ? 'out' : stock <= warn ? 'low' : 'ok';
+    const stockLabel = stock === 0 ? '0' : stock;
+    return `
+    <div class="inv-item ${stock === 0 ? 'out' : stock <= warn ? 'low' : ''}">
+      <div class="inv-info">
+        <div class="inv-name">${p['商品名']}</div>
+        <div class="inv-cat">${p['カテゴリー'] || ''} • 原価: MXN ${Number(p['移動平均原価 (MXN)'] || 0).toLocaleString()}</div>
+      </div>
+      <div>
+        <div class="inv-stock-badge ${cls}">${stockLabel}</div>
+        <div class="inv-price">MXN ${Number(p['販売価格 (MXN)']).toLocaleString()}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterInventory() {
+  renderInventory(document.getElementById('invSearch').value.trim());
+}
+
+// ============================================================
+// SALES TAB
+// ============================================================
+function updateSalesTab() {
+  const allSales = [...todaySales];
+  const total = allSales.reduce((s, r) => s + r.total, 0);
+  const disc = allSales.reduce((s, r) => s + r.discAmt, 0);
+  document.getElementById('todaySales').textContent = `MXN ${total.toLocaleString()}`;
+  document.getElementById('todayCount').textContent = allSales.length;
+  document.getElementById('todayDiscount').textContent = `MXN ${disc.toLocaleString()}`;
+  document.getElementById('unsyncedCount').textContent = offlineSales.length;
+
+  const list = document.getElementById('salesList');
+  if (!allSales.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text2);padding:24px;font-size:13px;">売上記録はありません</div>';
+    return;
+  }
+  list.innerHTML = allSales.map(r => `
+    <div class="sale-item">
+      <div class="sale-top">
+        <span class="sale-time">${r.datetime}</span>
+        <span class="sale-amount">MXN ${r.total.toLocaleString()}</span>
+      </div>
+      <div class="sale-detail">
+        ${r.items.map(i => `${i.name} ×${i.qty}`).join('、')}
+      </div>
+      <div>
+        <span class="sale-payment ${r.payment}">${r.payment}</span>
+        <span style="font-size:12px;color:var(--text2);margin-left:6px;">${r.staff}</span>
+        ${r.discAmt > 0 ? `<span style="font-size:11px;color:var(--accent3);margin-left:6px;">割引 -MXN ${r.discAmt}</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// RECEIVING TAB
+// ============================================================
+let recvProducts = []; // [{productId, name, price, qty, unitPriceJpy}]
+
+function canAccessReceiving() {
+  if (!currentStaff) return false;
+  const level = currentStaff['権限レベル'];
+  return level === 'オーナー' || level === 'シニアスタッフ';
+}
+
+function initReceivingTab() {
+  const denied = document.getElementById('recvAccessDenied');
+  const form = document.getElementById('recvForm');
+  if (!canAccessReceiving()) {
+    denied.classList.remove('hidden');
+    form.classList.add('hidden');
+    return;
+  }
+  denied.classList.add('hidden');
+  form.classList.remove('hidden');
+
+  // Set today's date as default
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('recvDate').value = today;
+
+  // Auto-fill exchange rate from settings if available
+  const rate = localStorage.getItem('exchangeRate');
+  if (rate) document.getElementById('recvRate').value = rate;
+
+  // Generate next lot ID
+  const lotNum = (parseInt(localStorage.getItem('lastLotNum') || '0') + 1).toString().padStart(3, '0');
+  document.getElementById('recvLotId').value = `LOT${lotNum}`;
+
+  renderRecvProductList();
+  updateRecvSummary();
+}
+
+function renderRecvProductList() {
+  const el = document.getElementById('recvProductList');
+  if (!recvProducts.length) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:12px;">商品を追加してください</div>';
+    return;
+  }
+  el.innerHTML = recvProducts.map((item, i) => `
+    <div class="recv-product-row">
+      <div class="recv-product-top">
+        <div class="recv-product-name">${item.name}</div>
+        <button class="recv-product-remove" onclick="removeRecvProduct(${i})">✕</button>
+      </div>
+      <div class="recv-product-fields">
+        <div>
+          <div class="recv-mini-label">数量</div>
+          <input class="recv-mini-input" type="number" min="1" value="${item.qty}"
+            oninput="updateRecvProduct(${i}, 'qty', this.value)" inputmode="numeric">
+        </div>
+        <div>
+          <div class="recv-mini-label">仕入単価 (JPY)</div>
+          <input class="recv-mini-input" type="number" min="0" value="${item.unitPriceJpy || ''}"
+            placeholder="例: 1500" oninput="updateRecvProduct(${i}, 'unitPriceJpy', this.value)" inputmode="decimal">
+        </div>
+        <div>
+          <div class="recv-mini-label">販売価格 (MXN)</div>
+          <input class="recv-mini-input" type="number" min="0" value="${item.price || ''}"
+            placeholder="例: 500" oninput="updateRecvProduct(${i}, 'price', this.value)" inputmode="decimal">
+        </div>
+      </div>
+      <div class="recv-cost-preview" id="recvCostPreview${i}"></div>
+    </div>
+  `).join('');
+  updateAllCostPreviews();
+}
+
+function updateRecvProduct(index, field, value) {
+  recvProducts[index][field] = parseFloat(value) || 0;
+  updateAllCostPreviews();
+  updateRecvSummary();
+}
+
+function updateAllCostPreviews() {
+  const rate = parseFloat(document.getElementById('recvRate').value) || 0;
+  recvProducts.forEach((item, i) => {
+    const el = document.getElementById(`recvCostPreview${i}`);
+    if (!el) return;
+    if (item.unitPriceJpy && rate) {
+      const costMxn = item.unitPriceJpy * rate;
+      const margin = item.price ? item.price - costMxn : null;
+      el.textContent = `原価: MXN ${costMxn.toFixed(2)} / 個` +
+        (margin !== null ? `　送料枠: MXN ${margin.toFixed(2)} / 個` : '');
+    } else {
+      el.textContent = '';
+    }
+  });
+}
+
+function removeRecvProduct(index) {
+  recvProducts.splice(index, 1);
+  renderRecvProductList();
+  updateRecvSummary();
+}
+
+function updateRecvSummary() {
+  const rate = parseFloat(document.getElementById('recvRate').value) || 0;
+  const shipping = parseFloat(document.getElementById('recvShipping').value) || 0;
+  const refund = parseFloat(document.getElementById('recvRefund').value) || 0;
+
+  const totalQty = recvProducts.reduce((s, p) => s + (p.qty || 0), 0);
+  const costTotal = recvProducts.reduce((s, p) => s + ((p.unitPriceJpy || 0) * rate * (p.qty || 0)), 0);
+  const saleTotal = recvProducts.reduce((s, p) => s + ((p.price || 0) * (p.qty || 0)), 0);
+  const shippingBudget = saleTotal - costTotal;
+  const lotResult = shippingBudget - shipping + refund;
+
+  document.getElementById('sumProductCount').textContent = recvProducts.length;
+  document.getElementById('sumTotalQty').textContent = `${totalQty} 個`;
+  document.getElementById('sumCostTotal').textContent = `MXN ${costTotal.toFixed(0)}`;
+  document.getElementById('sumShipping').textContent = `MXN ${shipping.toFixed(0)}`;
+  document.getElementById('sumRefund').textContent = `MXN ${refund.toFixed(0)}`;
+  document.getElementById('sumSaleTotal').textContent = `MXN ${saleTotal.toFixed(0)}`;
+  document.getElementById('sumShippingBudget').textContent = `MXN ${shippingBudget.toFixed(0)}`;
+
+  const poolEl = document.getElementById('sumPoolResult');
+  const poolRow = document.getElementById('sumPoolRow');
+  poolEl.textContent = `MXN ${lotResult.toFixed(0)}`;
+  poolRow.className = 'recv-sum-row ' + (lotResult >= 0 ? 'pool-pos' : 'pool-neg');
+
+  // Enable submit button if minimum data is filled
+  const lotId = document.getElementById('recvLotId').value.trim();
+  const canSubmit = lotId && rate > 0 && recvProducts.length > 0 &&
+    recvProducts.every(p => p.qty > 0 && p.unitPriceJpy > 0 && p.price > 0);
+  document.getElementById('recvSubmitBtn').disabled = !canSubmit;
+
+  updateAllCostPreviews();
+}
+
+// Product Picker
+function openProductPicker() {
+  document.getElementById('productPicker').classList.add('open');
+  document.getElementById('pickerSearch').value = '';
+  renderPickerList('');
+  setTimeout(() => document.getElementById('pickerSearch').focus(), 100);
+}
+
+function closeProductPicker() {
+  document.getElementById('productPicker').classList.remove('open');
+}
+
+function filterPicker() {
+  renderPickerList(document.getElementById('pickerSearch').value.trim());
+}
+
+function renderPickerList(filter) {
+  const el = document.getElementById('pickerList');
+  const alreadyAdded = recvProducts.map(p => p.productId);
+  const filtered = products.filter(p =>
+    !alreadyAdded.includes(p['商品ID']) &&
+    (!filter || p['商品名']?.includes(filter) || p['カテゴリー']?.includes(filter))
+  );
+  if (!filtered.length) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:24px;">商品が見つかりません</div>';
+    return;
+  }
+  el.innerHTML = filtered.map(p => `
+    <div class="picker-item" onclick="addRecvProduct('${p['商品ID']}')">
+      <div>
+        <div class="picker-item-name">${p['商品名']}</div>
+        <div class="picker-item-cat">${p['カテゴリー'] || ''}</div>
+      </div>
+      <div class="picker-item-stock">在庫 ${p['現在庫数']}個</div>
+    </div>
+  `).join('');
+}
+
+function addRecvProduct(productId) {
+  const p = products.find(pr => pr['商品ID'] === productId);
+  if (!p) return;
+  recvProducts.push({
+    productId,
+    name: p['商品名'],
+    price: Number(p['販売価格 (MXN)']) || 0,
+    qty: 1,
+    unitPriceJpy: 0
+  });
+  closeProductPicker();
+  renderRecvProductList();
+  updateRecvSummary();
+}
+
+// Submit receiving
+async function submitReceiving() {
+  const lotId = document.getElementById('recvLotId').value.trim();
+  const date = document.getElementById('recvDate').value;
+  const rate = parseFloat(document.getElementById('recvRate').value);
+  const shipping = parseFloat(document.getElementById('recvShipping').value) || 0;
+  const refund = parseFloat(document.getElementById('recvRefund').value) || 0;
+
+  const btn = document.getElementById('recvSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '登録中...';
+
+  const payload = {
+    action: 'saveLot',
+    lot: {
+      lotId, date, rate, shipping, refund,
+      staffId: currentStaff['スタッフID'],
+      staffName: currentStaff['名前'],
+      products: recvProducts.map(p => ({
+        productId: p.productId,
+        productName: p.name,
+        qty: p.qty,
+        unitPriceJpy: p.unitPriceJpy,
+        unitPriceMxn: p.unitPriceJpy * rate,
+        salePrice: p.price
+      }))
+    }
+  };
+
+  let success = false;
+  if (isOnline) {
+    try {
+      await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+      success = true;
+    } catch(e) {
+      saveOfflineLot(payload);
+      success = true; // saved locally
+    }
+  } else {
+    saveOfflineLot(payload);
+    success = true;
+  }
+
+  // Update local product stock & moving average cost
+  recvProducts.forEach(item => {
+    const p = products.find(pr => pr['商品ID'] === item.productId);
+    if (!p) return;
+    const oldStock = Number(p['現在庫数']) || 0;
+    const oldCost = Number(p['移動平均原価 (MXN)']) || 0;
+    const newCostPerUnit = item.unitPriceJpy * rate;
+    const newStock = oldStock + item.qty;
+    // Moving average: (oldStock * oldCost + newQty * newCost) / newStock
+    const newAvgCost = newStock > 0 ? ((oldStock * oldCost) + (item.qty * newCostPerUnit)) / newStock : newCostPerUnit;
+    p['現在庫数'] = newStock;
+    p['移動平均原価 (MXN)'] = Math.round(newAvgCost * 100) / 100;
+    p['販売価格 (MXN)'] = item.price;
+  });
+
+  localStorage.setItem('cachedProducts', JSON.stringify(products));
+  localStorage.setItem('lastLotNum', parseInt(lotId.replace('LOT','')) || 0);
+  localStorage.setItem('exchangeRate', rate);
+
+  if (success) {
+    alert(`✅ ロット ${lotId} を登録しました！\n在庫と移動平均原価が更新されました。`);
+    // Reset form
+    recvProducts = [];
+    renderRecvProductList();
+    initReceivingTab();
+    renderInventory();
+  }
+
+  btn.textContent = '入荷を登録する';
+}
+
+function saveOfflineLot(payload) {
+  const offlineLots = JSON.parse(localStorage.getItem('offlineLots') || '[]');
+  offlineLots.push(payload);
+  localStorage.setItem('offlineLots', JSON.stringify(offlineLots));
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(tab) {
+  ['register', 'inventory', 'sales', 'receiving'].forEach(t => {
+    document.getElementById(`${t}Tab`).classList.toggle('hidden', t !== tab);
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+  });
+  if (tab === 'sales') updateSalesTab();
+  if (tab === 'receiving') initReceivingTab();
+}
+</script>
+</body>
+</html>
