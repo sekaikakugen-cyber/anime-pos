@@ -701,16 +701,24 @@ function openScan(ctx) {
   document.getElementById('scanReg').innerHTML = '';
   setTimeout(startQR, 400);
 }
+
 async function startQR() {
   try {
+    if (qr) { try { await qr.stop(); } catch {} qr = null; }
     qr = new Html5Qrcode('scanReg');
     await qr.start(
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 220, height: 220 } },
-      code => { closeScan(); handleCode(code); },
-      () => {}
+      async (code) => {
+        // まずカメラを止めてからモーダルを閉じる
+        await closeScan();
+        // 少し待ってから処理（DOMが安定するのを待つ）
+        setTimeout(() => { handleCode(code); }, 100);
+      },
+      () => {} // decode error は無視
     );
   } catch(e) {
+    console.warn('QR start error:', e);
     document.getElementById('scanReg').innerHTML =
       '<div style="color:#fff;text-align:center;padding:48px 20px;font-size:14px;line-height:1.8">' +
       'No se pudo acceder a la cámara.<br><br>' +
@@ -718,33 +726,48 @@ async function startQR() {
       '② Recarga la página e intenta de nuevo</div>';
   }
 }
+
 async function closeScan() {
-  if (qr) { try { await qr.stop(); } catch {} qr = null; }
+  try {
+    if (qr) { await qr.stop(); qr = null; }
+  } catch(e) { qr = null; }
   document.getElementById('scanMod').classList.remove('open');
 }
+
 function handleCode(code) {
-  if (scanCtx === 'caja') {
-    // Cajaは独自QRコード（D列）で照合
-    const p = prods.find(x => x['独自QRコード'] === code);
-    if (p) addCart(p['商品ID']);
-    else alert(`Código QR: ${code}\nProducto no encontrado.\n¿Registraste el QR propio en la columna D?`);
-  } else if (scanCtx === 'picker') {
-    // EntradaはISBN（E列）または独自QR（D列）どちらでも検索
-    const p = prods.find(x => x['ISBN / 製品番号'] === code || x['独自QRコード'] === code);
-    if (p) {
-      if (ePs.find(x => x.id === p['商品ID'])) { openPick(); setPMsg('⚠ Ya fue agregado', 'var(--red)'); }
-      else { addProd(p['商品ID']); }
-    } else {
-      document.getElementById('pickIn').value = code;
-      filtPick(code);
-      setPMsg(`⚠ Código ${code} no encontrado. Busca manualmente.`, 'var(--yellow)');
-      openPick();
+  try {
+    if (scanCtx === 'caja') {
+      const p = prods.find(x => String(x['独自QRコード']) === String(code));
+      if (p) addCart(p['商品ID']);
+      else alert(`Código QR: ${code}\nProducto no encontrado.`);
+    } else if (scanCtx === 'picker') {
+      const p = prods.find(x =>
+        String(x['ISBN / 製品番号']) === String(code) ||
+        String(x['独自QRコード']) === String(code)
+      );
+      if (p) {
+        if (ePs.find(x => x.id === p['商品ID'])) {
+          openPick();
+          setPMsg('⚠ Ya fue agregado', 'var(--red)');
+        } else {
+          addProd(p['商品ID']);
+        }
+      } else {
+        document.getElementById('pickIn').value = code;
+        filtPick(code);
+        setPMsg(`⚠ Código ${code} no encontrado. Busca manualmente.`, 'var(--yellow)');
+        openPick();
+      }
     }
+  } catch(e) {
+    console.warn('handleCode error:', e);
   }
 }
+
 function doManScan() {
-  const c = document.getElementById('scanMan').value.trim(); if (!c) return;
-  closeScan(); handleCode(c);
+  const c = document.getElementById('scanMan').value.trim();
+  if (!c) return;
+  closeScan().then(() => { setTimeout(() => handleCode(c), 100); });
 }
 
 // ── INVENTARIO ──
