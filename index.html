@@ -654,7 +654,14 @@ async function doCobrar() {
   if (!cart.length || !payM) return;
   const sub = cart.reduce((s, x) => s + x.price * x.qty, 0);
   const disc = getDisc(sub), tot = sub - disc;
-  const txn = 'TXN' + Date.now(), dt = new Date().toLocaleString('es-MX');
+  const txn = 'TXN' + Date.now();
+  // スプレッドシートが認識できる形式 yyyy/mm/dd HH:MM
+  const now = new Date();
+  const dt = now.getFullYear() + '/'
+    + String(now.getMonth()+1).padStart(2,'0') + '/'
+    + String(now.getDate()).padStart(2,'0') + ' '
+    + String(now.getHours()).padStart(2,'0') + ':'
+    + String(now.getMinutes()).padStart(2,'0');
   const rows = cart.map(it => ({
     transactionId: txn, datetime: dt, staffId: me['スタッフID'], staffName: me['名前'],
     productId: it.id, productName: it.name, quantity: it.qty, unitPrice: it.price,
