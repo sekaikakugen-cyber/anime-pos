@@ -1407,8 +1407,8 @@ function updateOnlineStatus() {
 // ============================================================
 function saveGasUrl() {
   const url = document.getElementById('gasUrlInput').value.trim();
-  if (!url.startsWith('https://script.google.com/macros/s/')) {
-    document.getElementById('setupError').textContent = 'Por favor ingresa una URL válida de GAS';
+  if (!url.startsWith('https://')) {
+    document.getElementById('setupError').textContent = 'Por favor ingresa una URL válida (https://...)';
     return;
   }
   GAS_URL = url;
