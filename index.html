@@ -415,7 +415,7 @@ input:focus,select:focus{border-color:var(--red)}
   <div id="scanReg"></div>
   <button class="scancl" onclick="closeScan()">✕</button>
   <div class="scanbot">
-    <p>Alinea el código de barras o QR en el centro de la pantalla</p>
+    <p>Mantén el QR centrado y quieto • Distancia: 10-15cm • Buena iluminación</p>
     <div class="scanman">
       <input id="scanMan" type="text" placeholder="O ingresa el código manualmente..." inputmode="numeric">
       <button onclick="doManScan()">Buscar</button>
@@ -708,7 +708,7 @@ async function startQR() {
     qr = new Html5Qrcode('scanReg');
     await qr.start(
       { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 220, height: 220 } },
+      { fps: 15, qrbox: { width: 280, height: 280 }, aspectRatio: 1.0 },
       async (code) => {
         // まずカメラを止めてからモーダルを閉じる
         await closeScan();
