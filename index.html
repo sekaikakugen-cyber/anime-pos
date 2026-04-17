@@ -213,6 +213,10 @@
 
     /* ============ MAIN APP ============ */
     #app { display: none; min-height: 100vh; flex-direction: column; }
+    #registerTab, #inventoryTab, #salesTab, #receivingTab {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
 
     /* Top bar */
     .topbar {
@@ -263,7 +267,7 @@
       display: flex;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      position: sticky; top: 57px; z-index: 99;
+      position: sticky; top: 0; z-index: 99;
     }
     .tab {
       flex: 1;
@@ -799,7 +803,7 @@
     }
 
     /* ============ RECEIVING TAB ============ */
-    .receiving-layout { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .receiving-layout { padding: 16px; padding-top: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
     .recv-section {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1313,28 +1317,37 @@
       <div class="picker-title">Seleccionar producto</div>
       <button class="picker-close" onclick="closeProductPicker()">✕</button>
     </div>
-    <input class="picker-search" id="pickerSearch" type="text" placeholder="Buscar por nombre o categoría..." oninput="filterPicker()">
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <input class="picker-search" id="pickerSearch" type="text" placeholder="Buscar por nombre o categoría..." oninput="filterPicker()" style="margin-bottom:0;flex:1;">
+      <button onclick="openPickerScanner()" style="
+        background:var(--accent);
+        border:none;
+        border-radius:10px;
+        width:48px;
+        font-size:20px;
+        cursor:pointer;
+        flex-shrink:0;
+      ">📷</button>
+    </div>
+    <div id="pickerScanStatus" style="display:none;font-size:12px;color:var(--accent2);margin-bottom:8px;text-align:center;"></div>
     <div class="picker-list" id="pickerList"></div>
   </div>
 </div>
 
 <!-- ===== SCANNER MODAL ===== -->
 <div class="scanner-modal" id="scannerModal">
-  <video id="scannerVideo" autoplay playsinline muted></video>
-  <div class="scanner-overlay">
-    <div class="scanner-frame">
-      <div class="scanner-line"></div>
-    </div>
-    <div class="scanner-hint">Alinea el código de barras o QR dentro del marco</div>
+  <div id="scannerVideo" style="width:100%;flex:1;"></div>
+  <div class="scanner-overlay" style="pointer-events:none;">
+    <div class="scanner-hint" style="position:absolute;bottom:120px;">Alinea el código de barras o QR dentro del marco</div>
   </div>
   <button class="scanner-close" onclick="closeScanner()">✕</button>
   <div class="scanner-manual">
     <input type="text" id="manualBarcode" placeholder="Ingresar código..." inputmode="numeric">
-    <button onclick="manualBarcodeSearch()">検索</button>
+    <button onclick="manualBarcodeSearch()">Buscar</button>
   </div>
 </div>
 
-<script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 // ============================================================
 // STATE
@@ -1351,7 +1364,6 @@ let discountApplied = false;
 let todaySales = [];
 let offlineSales = JSON.parse(localStorage.getItem('offlineSales') || '[]');
 let isOnline = navigator.onLine;
-let codeReader = null;
 
 // ============================================================
 // INIT
@@ -1862,17 +1874,23 @@ async function syncOffline() {
 setInterval(() => { if (isOnline) syncOffline(); }, 60000);
 
 // ============================================================
-// SCANNER
+// SCANNER (html5-qrcode - iPhone Safari対応)
 // ============================================================
+let html5QrCode = null;
+
 async function openScanner() {
   document.getElementById('scannerModal').classList.add('open');
+  // Clear any previous instance
+  if (html5QrCode) {
+    try { await html5QrCode.stop(); } catch(e) {}
+    html5QrCode = null;
+  }
   try {
-    codeReader = new ZXing.BrowserMultiFormatReader();
-    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
-    const deviceId = devices[devices.length - 1]?.deviceId; // back camera
-    await codeReader.decodeFromVideoDevice(deviceId, 'scannerVideo', (result, err) => {
-      if (result) {
-        const code = result.getText();
+    html5QrCode = new Html5Qrcode('scannerVideo');
+    await html5QrCode.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      (code) => {
         closeScanner();
         const product = products.find(p => p['バーコード / QRコード'] === code);
         if (product) {
@@ -1882,15 +1900,21 @@ async function openScanner() {
         } else {
           alert(`Código: ${code}\nProducto no encontrado`);
         }
-      }
-    });
+      },
+      () => {} // ignore decode errors
+    );
   } catch(e) {
     console.warn('Scanner error:', e);
+    alert('No se pudo acceder a la cámara.\nVerifica los permisos en Ajustes > Safari > Cámara.');
+    closeScanner();
   }
 }
 
-function closeScanner() {
-  if (codeReader) { codeReader.reset(); codeReader = null; }
+async function closeScanner() {
+  if (html5QrCode) {
+    try { await html5QrCode.stop(); } catch(e) {}
+    html5QrCode = null;
+  }
   document.getElementById('scannerModal').classList.remove('open');
 }
 
@@ -2112,15 +2136,159 @@ function updateRecvSummary() {
 }
 
 // Product Picker
-function openProductPicker() {
+let pickerQrCode = null;
+
+async function openPickerScanner() {
+  const statusEl = document.getElementById('pickerScanStatus');
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--accent2)';
+  statusEl.textContent = '📷 Activando cámara...';
+
+  // Create video div if not exists
+  let videoEl = document.getElementById('pickerVideo');
+  if (!videoEl) {
+    videoEl = document.createElement('div');
+    videoEl.id = 'pickerVideo';
+    videoEl.style.cssText = 'width:100%;border-radius:12px;margin-bottom:10px;overflow:hidden;';
+    const sheet = document.querySelector('.product-picker-sheet');
+    const list = document.getElementById('pickerList');
+    sheet.insertBefore(videoEl, list);
+  }
+  videoEl.style.display = 'block';
+
+  if (pickerQrCode) {
+    try { await pickerQrCode.stop(); } catch(e) {}
+    pickerQrCode = null;
+  }
+
+  try {
+    pickerQrCode = new Html5Qrcode('pickerVideo');
+    await pickerQrCode.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 200, height: 200 } },
+      (code) => {
+        stopPickerScanner();
+        const product = products.find(p => p['バーコード / QRコード'] === code);
+        if (product) {
+          const alreadyAdded = recvProducts.map(p => p.productId);
+          if (alreadyAdded.includes(product['商品ID'])) {
+            statusEl.style.display = 'block';
+            statusEl.style.color = 'var(--accent)';
+            statusEl.textContent = '⚠ Este producto ya fue agregado';
+          } else {
+            addRecvProduct(product['商品ID']);
+          }
+        } else {
+          document.getElementById('pickerSearch').value = code;
+          filterPicker();
+          statusEl.style.display = 'block';
+          statusEl.style.color = 'var(--accent2)';
+          statusEl.textContent = `⚠ Código: ${code} — no encontrado. Busca manualmente.`;
+        }
+      },
+      () => {}
+    );
+    statusEl.textContent = '🔍 Apunta al código de barras...';
+  } catch(e) {
+    statusEl.style.color = 'var(--accent)';
+    statusEl.textContent = '⚠ No se pudo acceder a la cámara';
+    console.warn('Picker scanner error:', e);
+  }
+}
+
+async function stopPickerScanner() {
+  if (pickerQrCode) {
+    try { await pickerQrCode.stop(); } catch(e) {}
+    pickerQrCode = null;
+  }
+  const videoEl = document.getElementById('pickerVideo');
+  if (videoEl) videoEl.style.display = 'none';
+  const statusEl = document.getElementById('pickerScanStatus');
+  if (statusEl) statusEl.style.display = 'none';
+}
   document.getElementById('productPicker').classList.add('open');
   document.getElementById('pickerSearch').value = '';
+  document.getElementById('pickerScanStatus').style.display = 'none';
   renderPickerList('');
   setTimeout(() => document.getElementById('pickerSearch').focus(), 100);
 }
 
 function closeProductPicker() {
+  stopPickerScanner();
   document.getElementById('productPicker').classList.remove('open');
+}
+
+async function openPickerScanner() {
+  const statusEl = document.getElementById('pickerScanStatus');
+  statusEl.style.display = 'block';
+  statusEl.textContent = '📷 Activando cámara...';
+
+  try {
+    pickerCodeReader = new ZXing.BrowserMultiFormatReader();
+    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+    if (!devices.length) {
+      statusEl.textContent = '⚠ No se encontró cámara';
+      return;
+    }
+
+    // Use inline video inside the picker sheet
+    let videoEl = document.getElementById('pickerVideo');
+    if (!videoEl) {
+      videoEl = document.createElement('video');
+      videoEl.id = 'pickerVideo';
+      videoEl.autoplay = true;
+      videoEl.playsInline = true;
+      videoEl.muted = true;
+      videoEl.style.cssText = 'width:100%;border-radius:12px;margin-bottom:10px;max-height:180px;object-fit:cover;';
+      const sheet = document.querySelector('.product-picker-sheet');
+      const list = document.getElementById('pickerList');
+      sheet.insertBefore(videoEl, list);
+    }
+    videoEl.style.display = 'block';
+
+    const deviceId = devices[devices.length - 1]?.deviceId;
+    statusEl.textContent = '🔍 Apunta al código de barras...';
+
+    await pickerCodeReader.decodeFromVideoDevice(deviceId, 'pickerVideo', (result, err) => {
+      if (result) {
+        const code = result.getText();
+        stopPickerScanner();
+        // Search by barcode
+        const product = products.find(p => p['バーコード / QRコード'] === code);
+        if (product) {
+          const alreadyAdded = recvProducts.map(p => p.productId);
+          if (alreadyAdded.includes(product['商品ID'])) {
+            statusEl.style.display = 'block';
+            statusEl.textContent = '⚠ Este producto ya fue agregado';
+            statusEl.style.color = 'var(--accent)';
+          } else {
+            addRecvProduct(product['商品ID']);
+          }
+        } else {
+          // Show code in search box for manual match
+          document.getElementById('pickerSearch').value = code;
+          filterPicker();
+          statusEl.style.display = 'block';
+          statusEl.textContent = `⚠ Código: ${code} — no encontrado. Busca manualmente.`;
+          statusEl.style.color = 'var(--accent2)';
+        }
+      }
+    });
+  } catch(e) {
+    statusEl.textContent = '⚠ Error al acceder a la cámara';
+    console.warn('Picker scanner error:', e);
+  }
+}
+
+function stopPickerScanner() {
+  if (pickerCodeReader) {
+    pickerCodeReader.reset();
+    pickerCodeReader = null;
+  }
+  const videoEl = document.getElementById('pickerVideo');
+  if (videoEl) videoEl.style.display = 'none';
+  const statusEl = document.getElementById('pickerScanStatus');
+  if (statusEl) statusEl.style.display = 'none';
 }
 
 function filterPicker() {
@@ -2132,7 +2300,10 @@ function renderPickerList(filter) {
   const alreadyAdded = recvProducts.map(p => p.productId);
   const filtered = products.filter(p =>
     !alreadyAdded.includes(p['商品ID']) &&
-    (!filter || p['商品名']?.includes(filter) || p['カテゴリー']?.includes(filter))
+    (!filter ||
+      p['商品名']?.includes(filter) ||
+      p['カテゴリー']?.includes(filter) ||
+      p['バーコード / QRコード']?.includes(filter))
   );
   if (!filtered.length) {
     el.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:24px;">No se encontraron productos</div>';
