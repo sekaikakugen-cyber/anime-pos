@@ -402,7 +402,7 @@ input:focus,select:focus{border-color:var(--red)}
       <button class="pickc" onclick="closePick()">✕</button>
     </div>
     <div class="picksr">
-      <input id="pickIn" type="text" placeholder="Buscar por nombre, categoría o código..." oninput="filtPick(this.value)">
+      <input id="pickIn" type="text" placeholder="Buscar por nombre, categoría, QR o ISBN..." oninput="filtPick(this.value)">
       <button class="pscb" onclick="openScan('picker')">📷</button>
     </div>
     <div class="pickmsg" id="pickMsg"></div>
@@ -538,7 +538,7 @@ function goTab(t) {
 function rendProds(f = '') {
   const el = document.getElementById('pGrid');
   const list = prods.filter(p => p['状態'] === '販売中' &&
-    (!f || p['商品名']?.includes(f) || p['バーコード / QRコード']?.includes(f) || p['カテゴリー']?.includes(f)));
+    (!f || p['商品名']?.includes(f) || p['独自QRコード']?.includes(f) || p['カテゴリー']?.includes(f)));
   if (!list.length) { el.innerHTML = '<div style="grid-column:span 2;text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>'; return; }
   el.innerHTML = list.map(p => {
     const st = Number(p['現在庫数']), wn = Number(p['警告在庫数']);
@@ -724,11 +724,13 @@ async function closeScan() {
 }
 function handleCode(code) {
   if (scanCtx === 'caja') {
-    const p = prods.find(x => x['バーコード / QRコード'] === code);
+    // Cajaは独自QRコード（D列）で照合
+    const p = prods.find(x => x['独自QRコード'] === code);
     if (p) addCart(p['商品ID']);
-    else alert(`Código: ${code}\nProducto no encontrado`);
+    else alert(`Código QR: ${code}\nProducto no encontrado.\n¿Registraste el QR propio en la columna D?`);
   } else if (scanCtx === 'picker') {
-    const p = prods.find(x => x['バーコード / QRコード'] === code);
+    // EntradaはISBN（E列）または独自QR（D列）どちらでも検索
+    const p = prods.find(x => x['ISBN / 製品番号'] === code || x['独自QRコード'] === code);
     if (p) {
       if (ePs.find(x => x.id === p['商品ID'])) { openPick(); setPMsg('⚠ Ya fue agregado', 'var(--red)'); }
       else { addProd(p['商品ID']); }
@@ -864,7 +866,8 @@ function rendPickL(f) {
   const added = ePs.map(p => p.id);
   const list = prods.filter(p =>
     !added.includes(p['商品ID']) &&
-    (!f || p['商品名']?.includes(f) || p['カテゴリー']?.includes(f) || p['バーコード / QRコード']?.includes(f))
+    (!f || p['商品名']?.includes(f) || p['カテゴリー']?.includes(f) ||
+     p['独自QRコード']?.includes(f) || p['ISBN / 製品番号']?.includes(f))
   );
   if (!list.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>'; return; }
   el.innerHTML = list.map(p => `
