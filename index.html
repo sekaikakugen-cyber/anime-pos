@@ -415,7 +415,7 @@ input:focus,select:focus{border-color:var(--red)}
   <div id="scanReg"></div>
   <button class="scancl" onclick="closeScan()">✕</button>
   <div class="scanbot">
-    <p>Mantén el QR centrado y quieto • Distancia: 10-15cm • Buena iluminación</p>
+    <p id="scanHint">Mantén el código centrado y quieto • Distancia: 10-15cm • Buena iluminación</p>
     <div class="scanman">
       <input id="scanMan" type="text" placeholder="O ingresa el código manualmente..." inputmode="numeric">
       <button onclick="doManScan()">Buscar</button>
@@ -706,6 +706,13 @@ function openScan(ctx) {
   document.getElementById('scanMod').classList.add('open');
   document.getElementById('scanMan').value = '';
   document.getElementById('scanReg').innerHTML = '';
+  // コンテキストに合わせてヒントを変更
+  const hint = document.getElementById('scanHint');
+  if (hint) {
+    hint.textContent = ctx === 'caja'
+      ? 'QRコードを枠内に合わせてください • 距離10〜15cm'
+      : 'ISBNバーコードを横長の枠に合わせてください • 距離10〜20cm';
+  }
   setTimeout(startQR, 400);
 }
 
@@ -713,16 +720,39 @@ async function startQR() {
   try {
     if (qr) { try { await qr.stop(); } catch {} qr = null; }
     qr = new Html5Qrcode('scanReg');
+
+    // Caja: QRコードのみ / Picker: バーコード（ISBN等）対応
+    const config = scanCtx === 'caja'
+      ? {
+          fps: 15,
+          qrbox: { width: 280, height: 280 },
+          aspectRatio: 1.0,
+          formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+        }
+      : {
+          fps: 15,
+          qrbox: { width: 320, height: 160 },
+          aspectRatio: 1.0,
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF,
+          ]
+        };
+
     await qr.start(
       { facingMode: 'environment' },
-      { fps: 15, qrbox: { width: 280, height: 280 }, aspectRatio: 1.0 },
+      config,
       async (code) => {
-        // まずカメラを止めてからモーダルを閉じる
         await closeScan();
-        // 少し待ってから処理（DOMが安定するのを待つ）
         setTimeout(() => { handleCode(code); }, 100);
       },
-      () => {} // decode error は無視
+      () => {}
     );
   } catch(e) {
     console.warn('QR start error:', e);
