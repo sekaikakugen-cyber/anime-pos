@@ -377,12 +377,13 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
         <!-- Mode Tabs -->
         <div class="modetabs">
           <button class="mtab on" id="mt-new" onclick="setMode('new')">🆕 Nuevo lote</button>
+          <button class="mtab" id="mt-add" onclick="setMode('add')">➕ Agregar productos</button>
           <button class="mtab" id="mt-edit" onclick="setMode('edit')">✏️ Editar lote</button>
         </div>
 
-        <!-- Edit: Lot selector -->
+        <!-- Add/Edit: Lot selector -->
         <div class="esec hide" id="editSec">
-          <div class="esh">🔍 Seleccionar lote</div>
+          <div class="esh" id="editSecTitle">🔍 Seleccionar lote</div>
           <div class="esb">
             <div style="display:flex;gap:8px;align-items:flex-end">
               <div style="flex:1">
@@ -911,13 +912,45 @@ function initEntrada() {
 
 function setMode(m) {
   eMode = m;
-  document.getElementById('mt-new').className   = 'mtab' + (m==='new'?' on':'');
-  document.getElementById('mt-edit').className  = 'mtab' + (m==='edit'?' onedit':'');
-  document.getElementById('editSec').classList.toggle('hide', m !== 'edit');
+  // タブのスタイル
+  document.getElementById('mt-new').className  = 'mtab' + (m==='new'  ? ' on'     : '');
+  document.getElementById('mt-add').className  = 'mtab' + (m==='add'  ? ' onedit' : '');
+  document.getElementById('mt-edit').className = 'mtab' + (m==='edit' ? ' onedit' : '');
+
+  // ロット選択エリア：追加・編集モードで表示
+  document.getElementById('editSec').classList.toggle('hide', m === 'new');
+
+  // ロット選択エリアのタイトルを変更
+  const title = document.getElementById('editSecTitle');
+  if (title) title.textContent = m === 'add' ? '➕ 商品を追加するロットを選択' : '✏️ 編集するロットを選択';
+
+  // 商品追加エリア：新規・追加モードで表示（編集モードは非表示）
   document.getElementById('prodSec').classList.toggle('hide', m === 'edit');
-  document.getElementById('eLotId').disabled    = m === 'edit';
-  document.getElementById('eLotId').style.opacity = m === 'edit' ? '.5' : '1';
-  document.getElementById('regBtn').textContent  = m === 'edit' ? 'ACTUALIZAR LOTE' : 'REGISTRAR ENTRADA';
+
+  // ロットID入力欄：追加・編集モードでは読み取り専用
+  document.getElementById('eLotId').disabled     = m !== 'new';
+  document.getElementById('eLotId').style.opacity= m !== 'new' ? '.5' : '1';
+
+  // 送料・為替欄：編集モードのみ編集可、追加モードは参照のみ
+  const shipEl = document.getElementById('eShip');
+  const refEl  = document.getElementById('eRef');
+  const rateEl = document.getElementById('eRate');
+  shipEl.disabled = m === 'add';
+  refEl.disabled  = m === 'add';
+  rateEl.disabled = m === 'add';
+  shipEl.style.opacity = m === 'add' ? '.5' : '1';
+  refEl.style.opacity  = m === 'add' ? '.5' : '1';
+  rateEl.style.opacity = m === 'add' ? '.5' : '1';
+
+  // ボタンテキスト
+  const btn = document.getElementById('regBtn');
+  if (m === 'new')  btn.textContent = 'REGISTRAR ENTRADA';
+  if (m === 'add')  btn.textContent = 'AGREGAR PRODUCTOS AL LOTE';
+  if (m === 'edit') btn.textContent = 'ACTUALIZAR LOTE';
+
+  // 追加モードに切り替えた場合は商品リストをリセット
+  if (m === 'add') { eProds = []; renderEProds(); }
+
   calcE();
 }
 
@@ -1007,9 +1040,14 @@ function calcE() {
   const r6 = document.getElementById('es6row');
   r6.className = 'esr ' + (result >= 0 ? 'pos' : 'neg');
 
-  const lotId = document.getElementById('eLotId').value.trim();
-  const rate2 = rate > 0;
-  const prodsOk = eMode === 'edit' || (eProds.length > 0 && eProds.every(p => p.qty > 0 && p.jpy > 0 && p.mxn > 0));
+  const lotId  = document.getElementById('eLotId').value.trim();
+  const rate2  = rate > 0;
+  // 追加モード：商品が1つ以上あり全て入力済みならOK（送料は既存値を使うので不要）
+  // 編集モード：ロットIDと為替レートがあればOK
+  // 新規モード：全項目必要
+  const prodsOk = eMode === 'edit'
+    ? true
+    : (eProds.length > 0 && eProds.every(p => p.qty > 0 && p.jpy > 0 && p.mxn > 0));
   document.getElementById('regBtn').disabled = !(lotId && rate2 && prodsOk);
 }
 
@@ -1023,26 +1061,47 @@ async function doReg() {
   const btn     = document.getElementById('regBtn');
   btn.disabled  = true;
 
-  const payload = eMode === 'edit'
-    ? { action: 'editLot', lot: { lotId, rate, shippingJpy: shipJpy, refundJpy: refJpy } }
-    : { action: 'saveLot', lot: {
-        lotId, date: oDate, arrDate: aDate, rate, shippingJpy: shipJpy, refundJpy: refJpy,
-        products: eProds.map(p => ({ id: p.id, name: p.name, qty: p.qty, jpy: p.jpy, mxn: p.mxn }))
-      }};
+  let payload;
+  if (eMode === 'edit') {
+    // 編集：送料・為替レートのみ更新
+    payload = { action: 'editLot', lot: { lotId, rate, shippingJpy: shipJpy, refundJpy: refJpy } };
+  } else if (eMode === 'add') {
+    // 追加：既存ロットに商品を追加（送料は既存のまま）
+    payload = { action: 'saveLot', lot: {
+      lotId, date: oDate, arrDate: aDate, rate,
+      shippingJpy: shipJpy, refundJpy: refJpy,
+      products: eProds.map(p => ({ id: p.id, name: p.name, qty: p.qty, jpy: p.jpy, mxn: p.mxn }))
+    }};
+  } else {
+    // 新規
+    payload = { action: 'saveLot', lot: {
+      lotId, date: oDate, arrDate: aDate, rate,
+      shippingJpy: shipJpy, refundJpy: refJpy,
+      products: eProds.map(p => ({ id: p.id, name: p.name, qty: p.qty, jpy: p.jpy, mxn: p.mxn }))
+    }};
+  }
 
   try {
     await fetch(GAS, { method:'POST', body: JSON.stringify(payload) });
-    btn.textContent = eMode === 'edit' ? '✅ ACTUALIZADO' : '✅ REGISTRADO';
     btn.style.background = 'var(--grn)';
     if (eMode === 'new') {
+      btn.textContent = '✅ REGISTRADO';
       localStorage.setItem('lastRate', rate);
       localStorage.setItem('lastLotNum', parseInt(lotId.replace(/[^0-9]/g,'')) || 0);
       eProds = [];
       initEntrada();
+    } else if (eMode === 'add') {
+      btn.textContent = '✅ PRODUCTOS AGREGADOS';
+      eProds = [];
+      renderEProds();
+    } else {
+      btn.textContent = '✅ ACTUALIZADO';
     }
     if (window.innerWidth >= 768) loadLots();
     setTimeout(() => {
-      btn.textContent = eMode === 'edit' ? 'ACTUALIZAR LOTE' : 'REGISTRAR ENTRADA';
+      if (eMode === 'new')  btn.textContent = 'REGISTRAR ENTRADA';
+      if (eMode === 'add')  btn.textContent = 'AGREGAR PRODUCTOS AL LOTE';
+      if (eMode === 'edit') btn.textContent = 'ACTUALIZAR LOTE';
       btn.style.background = '';
       btn.disabled = false;
     }, 2500);
@@ -1069,13 +1128,17 @@ function renderLots(lots) {
   const el = document.getElementById('lotList');
   if (!lots || !lots.length) { el.innerHTML = '<div class="loading">Sin lotes</div>'; return; }
   el.innerHTML = lots.slice(0,50).map(l => `
-    <div class="lotcard" onclick="fillEdit('${l.lotId}')">
+    <div class="lotcard">
       <div class="lctop"><span class="lcid">${l.lotId}</span><span class="lcitems">${l.items} productos</span></div>
       <div class="lcinfo">${l.date} · レート${l.rate} · 送料¥${(l.shippingJpy||0).toLocaleString()}</div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button onclick="fillEdit('${l.lotId}','add')" style="flex:1;background:rgba(0,214,143,.12);border:1px solid var(--grn);color:var(--grn);border-radius:7px;padding:7px;font-size:12px;font-weight:700;cursor:pointer">➕ Agregar productos</button>
+        <button onclick="fillEdit('${l.lotId}','edit')" style="flex:1;background:rgba(61,139,255,.12);border:1px solid var(--blu);color:var(--blu);border-radius:7px;padding:7px;font-size:12px;font-weight:700;cursor:pointer">✏️ Editar</button>
+      </div>
     </div>`).join('');
 }
-function fillEdit(lotId) {
-  setMode('edit');
+function fillEdit(lotId, mode) {
+  setMode(mode || 'edit');
   document.getElementById('editLotId').value = lotId;
   loadLot();
 }
