@@ -420,8 +420,13 @@ input:focus,select:focus{border-color:var(--red)}
           <div id="editLotSel" class="esec" style="display:none">
             <div class="esh">✏️ Seleccionar lote a editar</div>
             <div class="esb">
-              <div><div class="el">ID de lote existente</div>
-              <input id="editLotId" type="text" placeholder="Ej: LOT001" oninput="loadLotForEdit()"></div>
+              <div style="display:flex;gap:8px;align-items:flex-end">
+                <div style="flex:1">
+                  <div class="el">ID de lote existente</div>
+                  <input id="editLotId" type="text" placeholder="Ej: LOT001 ó 250-0459354-..." onkeydown="if(event.key==='Enter')doLoadLot()">
+                </div>
+                <button onclick="doLoadLot()" style="background:var(--blue);border:none;color:white;border-radius:9px;padding:11px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">🔍 読み込む</button>
+              </div>
               <div id="editLotInfo" style="font-size:12px;color:var(--t2)"></div>
             </div>
           </div>
@@ -1028,9 +1033,18 @@ function setEntradaMode(mode) {
   document.getElementById('modeEditBtn').style.cssText = isEdit
     ? 'flex:1;padding:10px;border:2px solid var(--blue);border-radius:10px;background:rgba(59,130,246,.1);color:var(--blue);font-weight:700;font-size:13px;cursor:pointer'
     : 'flex:1;padding:10px;border:2px solid var(--b);border-radius:10px;background:var(--s2);color:var(--t2);font-weight:700;font-size:13px;cursor:pointer';
-  document.getElementById('editLotSel').style.display = isEdit ? 'block' : 'none';
-  document.getElementById('prodSecEl').style.display  = isEdit ? 'none' : 'block';
-  document.getElementById('regBtn').textContent = isEdit ? 'ACTUALIZAR LOTE' : 'REGISTRAR ENTRADA';
+  document.getElementById('editLotSel').style.display  = isEdit ? 'block' : 'none';
+  document.getElementById('prodSecEl').style.display   = isEdit ? 'none'  : 'block';
+  document.getElementById('regBtn').textContent        = isEdit ? 'ACTUALIZAR LOTE' : 'REGISTRAR ENTRADA';
+  // 編集モードではeLotを読み取り専用にする（editLotIdから自動セットされる）
+  const eLot = document.getElementById('eLot');
+  eLot.disabled        = isEdit;
+  eLot.style.background = isEdit ? 'var(--s2)' : '';
+  if (!isEdit) {
+    // 新規モードに戻した時はeLotをリセット
+    const n = (parseInt(localStorage.getItem('lotN') || '0') + 1).toString().padStart(3, '0');
+    eLot.value = `LOT${n}`;
+  }
 }
 
 // ロット一覧を読み込んで表示（PC右カラム）
@@ -1072,35 +1086,46 @@ function rendLotList(lots) {
   }).join('');
 }
 
-// ロット情報をフォームに読み込む
+// ロット情報をフォームに読み込む（右カラムのカードクリック）
 function fillLotEdit(lotId) {
   setEntradaMode('edit');
   document.getElementById('editLotId').value = lotId;
-  document.getElementById('eLot').value = lotId;
-  loadLotForEdit();
+  doLoadLot();
 }
 
-async function loadLotForEdit() {
+// 「読み込む」ボタン押下
+async function doLoadLot() {
   const id = document.getElementById('editLotId').value.trim();
   if (!id) return;
-  document.getElementById('eLot').value = id;
   const infoEl = document.getElementById('editLotInfo');
+  infoEl.style.color = 'var(--t2)';
   infoEl.textContent = '読み込み中...';
   try {
     const r = await fetch(GAS + '?action=getLotById&lotId=' + encodeURIComponent(id));
     const d = await r.json();
-    if (!d.lot) { infoEl.textContent = 'ロットが見つかりません'; return; }
+    if (!d.lot) {
+      infoEl.style.color = 'var(--red)';
+      infoEl.textContent = '❌ ロットが見つかりません: ' + id;
+      return;
+    }
     const l = d.lot;
-    document.getElementById('eRate').value = l.rate || '';
-    document.getElementById('eShip').value = l.shippingJpy || 0;
-    document.getElementById('eRef').value  = l.refundJpy  || 0;
+    // eLotに書き込む（編集対象IDを確定）
+    document.getElementById('eLot').value   = id;
+    document.getElementById('eRate').value  = l.rate        || '';
+    document.getElementById('eShip').value  = l.shippingJpy || 0;
+    document.getElementById('eRef').value   = l.refundJpy   || 0;
     infoEl.style.color = 'var(--green)';
     infoEl.textContent = `✅ ${l.items}点のデータを読み込みました`;
     calcE();
   } catch(e) {
     infoEl.style.color = 'var(--red)';
-    infoEl.textContent = 'エラー: ' + e.message;
+    infoEl.textContent = '❌ エラー: ' + e.message;
   }
+}
+
+async function loadLotForEdit() {
+  // 後方互換のためdoLoadLotを呼ぶ
+  await doLoadLot();
 }
 
 function rendEPs() {
