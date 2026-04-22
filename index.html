@@ -1012,12 +1012,29 @@ function renderEProds() {
         <div><div class="epfl">PRECIO COMPRA (JPY)</div><input class="epi" type="text" inputmode="decimal" pattern="[0-9]*" value="${p.jpy||''}" placeholder="ej: 1500" oninput="updEProd(${i},'jpy',this.value)"></div>
         <div><div class="epfl">PRECIO VENTA (MXN)</div><input class="epi" type="text" inputmode="decimal" pattern="[0-9]*" value="${p.mxn||''}" placeholder="ej: 500" oninput="updEProd(${i},'mxn',this.value)"></div>
       </div>
-      ${p.jpy && rate ? `<div class="epcost" style="color:${bc}">Costo: MXN ${cost.toFixed(0)} · Margen: MXN ${budget.toFixed(0)}/ud.</div>` : ''}
+      ${p.jpy && rate ? `<div class="epcost" id="epc${i}" style="color:${bc}">Costo: MXN ${cost.toFixed(0)} · Margen: MXN ${budget.toFixed(0)}/ud.</div>` : `<div class="epcost" id="epc${i}"></div>`}
     </div>`;
   }).join('');
   calcE();
 }
-function updEProd(i, f, v) { eProds[i][f] = parseFloat(v) || 0; renderEProds(); }
+function updEProd(i, f, v) {
+  eProds[i][f] = parseFloat(v) || 0;
+  // 再描画せずにコスト表示だけ更新
+  const rate   = parseFloat(document.getElementById('eRate').value) || 0;
+  const p      = eProds[i];
+  const cost   = (p.jpy || 0) * rate;
+  const budget = p.mxn > 0 ? (p.mxn / 2 - cost) : 0;
+  const costEl = document.getElementById('epc' + i);
+  if (costEl) {
+    if (p.jpy && rate) {
+      costEl.textContent = `Costo: MXN ${cost.toFixed(0)} · Margen: MXN ${budget.toFixed(0)}/ud.`;
+      costEl.style.color = budget >= 0 ? 'var(--grn)' : 'var(--red)';
+    } else {
+      costEl.textContent = '';
+    }
+  }
+  calcE();
+}
 function removeEProd(i) { eProds.splice(i,1); renderEProds(); calcE(); }
 
 function calcE() {
