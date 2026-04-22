@@ -417,19 +417,19 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
               </div>
               <div>
                 <div class="el">TIPO DE CAMBIO (JPY→MXN)</div>
-                <input id="eRate" class="epi" type="number" step="0.001" placeholder="0.130" oninput="calcE()">
+                <input id="eRate" class="epi" type="text" inputmode="decimal" placeholder="0.130" oninput="calcE()">
                 <div class="enote" id="rateNote">Cargando tipo de cambio...</div>
               </div>
             </div>
             <div class="erow">
               <div>
                 <div class="el">ENVÍO + IMPUESTOS (JPY・円)</div>
-                <input id="eShip" class="epi" type="number" placeholder="0" oninput="calcE()">
+                <input id="eShip" class="epi" type="text" inputmode="numeric" placeholder="0" oninput="calcE()">
                 <div class="enote">※ Ingresar en yenes japoneses</div>
               </div>
               <div>
                 <div class="el">DEVOLUCIÓN IMPUESTOS (JPY・円)</div>
-                <input id="eRef" class="epi" type="number" placeholder="0" oninput="calcE()">
+                <input id="eRef" class="epi" type="text" inputmode="numeric" placeholder="0" oninput="calcE()">
               </div>
             </div>
           </div>
@@ -1008,9 +1008,9 @@ function renderEProds() {
     return `<div class="eprod">
       <div class="eprname">${p.name}<button onclick="removeEProd(${i})" style="background:none;border:none;color:var(--t2);font-size:16px">✕</button></div>
       <div class="epfields">
-        <div><div class="epfl">CANTIDAD</div><input class="epi" type="number" min="1" value="${p.qty}" oninput="updEProd(${i},'qty',this.value)" inputmode="numeric"></div>
-        <div><div class="epfl">PRECIO COMPRA (JPY)</div><input class="epi" type="number" min="0" value="${p.jpy||''}" placeholder="ej: 1500" oninput="updEProd(${i},'jpy',this.value)" inputmode="decimal"></div>
-        <div><div class="epfl">PRECIO VENTA (MXN)</div><input class="epi" type="number" min="0" value="${p.mxn||''}" placeholder="ej: 500" oninput="updEProd(${i},'mxn',this.value)" inputmode="decimal"></div>
+        <div><div class="epfl">CANTIDAD</div><input class="epi" type="text" inputmode="numeric" pattern="[0-9]*" value="${p.qty}" oninput="updEProd(${i},'qty',this.value)"></div>
+        <div><div class="epfl">PRECIO COMPRA (JPY)</div><input class="epi" type="text" inputmode="decimal" pattern="[0-9]*" value="${p.jpy||''}" placeholder="ej: 1500" oninput="updEProd(${i},'jpy',this.value)"></div>
+        <div><div class="epfl">PRECIO VENTA (MXN)</div><input class="epi" type="text" inputmode="decimal" pattern="[0-9]*" value="${p.mxn||''}" placeholder="ej: 500" oninput="updEProd(${i},'mxn',this.value)"></div>
       </div>
       ${p.jpy && rate ? `<div class="epcost" style="color:${bc}">Costo: MXN ${cost.toFixed(0)} · Margen: MXN ${budget.toFixed(0)}/ud.</div>` : ''}
     </div>`;
