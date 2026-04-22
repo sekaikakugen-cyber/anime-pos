@@ -924,21 +924,41 @@ function filtPick(v) { rendPickL(v); }
 function rendPickL(f) {
   const el = document.getElementById('pickL');
   const added = ePs.map(p => p.id);
-  const list = prods.filter(p =>
-    !added.includes(p['商品ID']) &&
-    (!f || p['商品名']?.includes(f) || p['カテゴリー']?.includes(f) ||
-     p['独自QRコード']?.includes(f) || p['ISBN / 製品番号']?.includes(f))
-  );
-  if (!list.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>'; return; }
-  el.innerHTML = list.map(p => `
-    <div class="pki" onclick="addProd('${p['商品ID']}')">
-      <div><div class="pkn">${p['商品名']}</div><div class="pkc">${p['カテゴリー'] || ''}</div></div>
-      <div class="pks">Stock: ${p['現在庫数']}</div>
-    </div>`).join('');
+  const q = (f || '').toLowerCase().trim();
+
+  const list = prods.filter(p => {
+    if (added.includes(p['商品ID'])) return false;
+    if (!q) return true;
+    // 複数のフィールド名パターンに対応
+    const name  = String(p['商品名'] || p['name'] || '').toLowerCase();
+    const cat   = String(p['カテゴリー'] || p['category'] || '').toLowerCase();
+    const qr    = String(p['独自QRコード'] || p['qr'] || '').toLowerCase();
+    const isbn  = String(p['ISBN / 製品番号'] || p['isbn'] || p['ISBN'] || '').toLowerCase();
+    const id    = String(p['商品ID'] || p['id'] || '').toLowerCase();
+    return name.includes(q) || cat.includes(q) || qr.includes(q) || isbn.includes(q) || id.includes(q);
+  });
+
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>';
+    return;
+  }
+  el.innerHTML = list.map(p => {
+    const name  = p['商品名'] || p['name'] || '';
+    const cat   = p['カテゴリー'] || p['category'] || '';
+    const stock = p['現在庫数'] || p['stock'] || 0;
+    const id    = p['商品ID'] || p['id'] || '';
+    return `<div class="pki" onclick="addProd('${id}')">
+      <div><div class="pkn">${name}</div><div class="pkc">${cat}</div></div>
+      <div class="pks">Stock: ${stock}</div>
+    </div>`;
+  }).join('');
 }
 function addProd(id) {
-  const p = prods.find(x => x['商品ID'] === id); if (!p) return;
-  ePs.push({ id, name: p['商品名'], mxn: Number(p['販売価格 (MXN)']) || 0, qty: 1, jpy: 0 });
+  const p = prods.find(x => (x['商品ID'] || x['id']) === id);
+  if (!p) return;
+  const name  = p['商品名'] || p['name'] || '';
+  const price = Number(p['販売価格 (MXN)'] || p['販売価格'] || p['price'] || 0);
+  ePs.push({ id, name, mxn: price, qty: 1, jpy: 0 });
   closePick(); rendEPs(); calcE();
 }
 
