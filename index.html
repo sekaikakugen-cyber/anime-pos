@@ -431,7 +431,7 @@ input:focus,select:focus{border-color:var(--red)}
             <div class="esb">
               <div class="erow">
                 <div><div class="el">ID de lote</div><input id="eLot" type="text" placeholder="LOT001" oninput="calcE()"></div>
-                <div><div class="el">Fecha de pedido</div><input id="eFecha" type="date" oninput="calcE()"></div>
+                <div><div class="el">Fecha de pedido</div><input id="eFecha" type="date" oninput="calcE();fetchRateForDate(this.value)"></div>
               </div>
               <div class="erow">
                 <div><div class="el">Fecha de llegada</div><input id="eFechaArr" type="date" oninput="calcE()"></div>
@@ -987,11 +987,34 @@ function initEntrada() {
   const r = localStorage.getItem('exR'); if (r) document.getElementById('eRate').value = r;
   const n = (parseInt(localStorage.getItem('lotN') || '0') + 1).toString().padStart(3, '0');
   document.getElementById('eLot').value = `LOT${n}`;
+  // 当日の為替レートを自動取得
+  fetchRateForDate(today);
   ePs = []; rendEPs(); calcE();
   // PC判定してロット一覧を表示
   if (window.innerWidth >= 768) {
     document.getElementById('editPanel').style.display = 'block';
     loadLotList();
+  }
+}
+
+// 注文日に基づいて為替レートを自動取得
+async function fetchRateForDate(dateStr) {
+  const rateEl = document.getElementById('eRate');
+  try {
+    // exchangerate-api.com（無料・CORS対応）
+    const res  = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+    const data = await res.json();
+    const rate = data.rates && data.rates.MXN ? Math.round(data.rates.MXN * 10000) / 10000 : null;
+    if (rate) {
+      rateEl.value = rate;
+      rateEl.style.borderColor = 'var(--green)';
+      setTimeout(() => { rateEl.style.borderColor = ''; }, 2000);
+      localStorage.setItem('exR', rate);
+      calcE();
+    }
+  } catch(e) {
+    // 取得失敗時は保存済みレートをそのまま使用
+    console.warn('Rate fetch failed:', e);
   }
 }
 
