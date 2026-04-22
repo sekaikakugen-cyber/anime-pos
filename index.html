@@ -2,321 +2,276 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="theme-color" content="#111118">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>AnimePOS</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
+/* ── Reset & Variables ── */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#111118;--s1:#18181f;--s2:#22222c;--b:#2e2e3e;
-  --red:#ff3b5c;--yellow:#ffb300;--green:#00d68f;--blue:#3d8bff;
-  --t1:#f0f0f5;--t2:#7878a0;
+  --bg:#0f0f17;--c1:#18181f;--c2:#22222c;--bd:#2e2e3e;
+  --red:#ff3b5c;--grn:#00d68f;--yel:#ffb300;--blu:#3d8bff;
+  --t1:#f0f0f5;--t2:#7878a0;--t3:#444460;
+  --r:12px;
 }
-html,body{height:100%;background:var(--bg);color:var(--t1);font-family:'DM Sans',sans-serif;overflow:hidden}
+html,body{height:100%;background:var(--bg);color:var(--t1);font-family:-apple-system,'Helvetica Neue',sans-serif;overflow:hidden}
+button{font-family:inherit;cursor:pointer}
 
-.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:var(--bg);z-index:10;overflow-y:auto}
-.screen.hidden{display:none!important}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:5px;margin-bottom:4px;text-align:center}
-.logo span{color:var(--red)}
-.sub{color:var(--t2);font-size:12px;letter-spacing:3px;text-align:center;margin-bottom:28px}
-.card{background:var(--s1);border:1px solid var(--b);border-radius:20px;padding:28px 24px;width:100%;max-width:400px}
-.lbl{font-size:11px;color:var(--t2);letter-spacing:1.5px;margin-bottom:8px}
-input,select{width:100%;background:var(--s2);border:1px solid var(--b);border-radius:10px;padding:14px 16px;color:var(--t1);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;-webkit-appearance:none;appearance:none}
-input:focus,select:focus{border-color:var(--red)}
-.btn{width:100%;background:var(--red);border:none;border-radius:12px;padding:16px;color:#fff;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:14px}
-.btn:active{opacity:.85}
-.btn.g{background:var(--green);color:#000}
-.errtxt{color:var(--red);font-size:13px;margin-top:8px;min-height:18px}
+/* ── PC Overrides ── */
+@media(min-width:768px){
+  :root{--bg:#f0f2f7;--c1:#fff;--c2:#f5f6fa;--bd:#e0e4ef;--t1:#1a1a2e;--t2:#6b7280;--t3:#c0c4cc}
+  html,body{overflow:auto}
+}
 
-.pdots{display:flex;gap:12px;justify-content:center;margin:18px 0}
-.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--b);transition:.15s}
+/* ── Screens ── */
+.scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:var(--bg);z-index:50;overflow-y:auto}
+.scr.hide{display:none!important}
+.logo{font-size:42px;font-weight:900;letter-spacing:4px;margin-bottom:4px;text-align:center}
+.logo em{color:var(--red);font-style:normal}
+.sub{color:var(--t2);font-size:11px;letter-spacing:3px;margin-bottom:28px;text-align:center}
+.card{background:var(--c1);border:1px solid var(--bd);border-radius:20px;padding:28px 24px;width:100%;max-width:400px}
+.lbl{font-size:11px;color:var(--t2);letter-spacing:1px;margin-bottom:6px}
+input,select{width:100%;background:var(--c2);border:1px solid var(--bd);border-radius:10px;padding:13px 15px;color:var(--t1);font-size:15px;font-family:inherit;outline:none;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,59,92,.15)}
+.btn{width:100%;background:var(--red);border:none;border-radius:12px;padding:15px;color:#fff;font-size:16px;font-weight:700;margin-top:12px}
+.btn.g{background:var(--grn);color:#000}
+.btn:disabled{background:var(--t3);cursor:not-allowed}
+.err{color:var(--red);font-size:13px;margin-top:8px;min-height:18px}
+.mt{margin-top:12px}
+
+/* ── PIN Pad ── */
+.dots{display:flex;gap:12px;justify-content:center;margin:18px 0}
+.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--bd)}
 .dot.on{background:var(--red);border-color:var(--red)}
-.ppad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px}
-.pk{background:var(--s2);border:1px solid var(--b);border-radius:12px;padding:18px;font-size:22px;font-weight:700;text-align:center;cursor:pointer;user-select:none;transition:.1s}
-.pk:active{background:var(--b);transform:scale(.95)}
-.pk.del{font-size:16px;color:var(--t2)}
+.ppad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pk{background:var(--c2);border:1px solid var(--bd);border-radius:10px;padding:17px;font-size:22px;font-weight:700;text-align:center;user-select:none}
+.pk:active{transform:scale(.93)}
+.pk.del{font-size:15px;color:var(--t2)}
 .pk.go{background:var(--red);border-color:var(--red);color:#fff}
 
-#app{position:fixed;inset:0;display:none;flex-direction:column;background:var(--bg)}
-.topbar{background:var(--s1);border-bottom:1px solid var(--b);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.tlogo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px}
-.tlogo span{color:var(--red)}
-.tr{display:flex;align-items:center;gap:10px}
-.nbadge{font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(0,214,143,.12);color:var(--green);border:1px solid rgba(0,214,143,.3)}
+/* ── App Shell ── */
+#app{position:fixed;inset:0;display:none;flex-direction:column}
+@media(min-width:768px){#app{position:relative;min-height:100vh}}
+.topbar{background:var(--c1);border-bottom:1px solid var(--bd);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tl{font-size:20px;font-weight:900;letter-spacing:2px;color:var(--t1)}
+.tl em{color:var(--red);font-style:normal}
+.nbadge{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(0,214,143,.12);color:var(--grn);border:1px solid rgba(0,214,143,.3)}
 .nbadge.off{background:rgba(255,59,92,.12);color:var(--red);border-color:rgba(255,59,92,.3)}
-.sbadge{font-size:12px;color:var(--t2)}
-.obtn{background:none;border:1px solid var(--b);border-radius:8px;padding:5px 10px;color:var(--t2);font-size:12px;cursor:pointer}
-
-.tabs{display:flex;background:var(--s1);border-bottom:1px solid var(--b);flex-shrink:0}
-.tab{flex:1;padding:11px 0;text-align:center;font-size:11px;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
-.tab .ti{font-size:17px;display:block;margin-bottom:2px}
+.tabs{display:flex;background:var(--c1);border-bottom:1px solid var(--bd);flex-shrink:0}
+.tab{flex:1;padding:10px 0;text-align:center;font-size:11px;color:var(--t2);border-bottom:2px solid transparent}
+.tab .ic{font-size:18px;display:block;margin-bottom:2px}
 .tab.on{color:var(--red);border-bottom-color:var(--red)}
-.tc{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.tc.hidden{display:none!important}
-.p{padding:14px}
+.pane{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg)}
+.pane.hide{display:none!important}
+.p14{padding:14px}
+@media(min-width:768px){
+  .pane{height:calc(100vh - 110px)}
+  .p14{padding:20px 28px;max-width:1100px;margin:0 auto}
+  .tabs .tab{flex:none;padding:12px 24px;font-size:13px;font-weight:700}
+  .tabs .tab .ic{display:inline;font-size:16px;margin:0 4px 0 0}
+}
 
+/* ── Caja Tab ── */
 .srow{display:flex;gap:8px;margin-bottom:12px}
 .srow input{flex:1}
-.sbtn{background:var(--red);border:none;border-radius:10px;width:48px;font-size:20px;cursor:pointer;flex-shrink:0}
-.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.pc{background:var(--s1);border:1px solid var(--b);border-radius:12px;padding:12px;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+.scnbtn{background:var(--red);border:none;border-radius:10px;width:48px;font-size:20px;flex-shrink:0}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+@media(min-width:768px){.pgrid{grid-template-columns:repeat(3,1fr)}
+  #tc-caja .p14{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start}}
+.pc{background:var(--c1);border:1px solid var(--bd);border-radius:var(--r);padding:12px;cursor:pointer}
 .pc:active{border-color:var(--red);transform:scale(.97)}
-.pc.warn{border-color:rgba(255,179,0,.35)}
+.pc.warn{border-color:rgba(255,179,0,.4)}
 .pc.out{opacity:.45;pointer-events:none}
-.pca{font-size:9px;color:var(--t2);background:var(--s2);padding:2px 6px;border-radius:5px;display:inline-block;margin-bottom:6px}
-.pn{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px}
-.ppr{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--yellow);letter-spacing:1px}
-.pst{font-size:10px;color:var(--t2);margin-top:3px}
-
-.cs{background:var(--s1);border:1px solid var(--b);border-radius:16px;overflow:hidden}
-.ch{padding:12px 16px;border-bottom:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px}
-.cb2{font-size:12px;color:var(--red);background:none;border:none;cursor:pointer}
-.cbody{min-height:60px;max-height:180px;overflow-y:auto}
+.pcat{font-size:9px;color:var(--t2);background:var(--c2);padding:2px 6px;border-radius:5px;display:inline-block;margin-bottom:5px}
+.pnm{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:4px}
+.ppr{font-size:22px;font-weight:900;color:var(--yel)}
+.pst{font-size:10px;color:var(--t2);margin-top:2px}
+.cart{background:var(--c1);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+@media(min-width:768px){.cart{position:sticky;top:0;border-radius:16px}}
+.chead{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px}
+.cclear{font-size:12px;color:var(--red);background:none;border:none}
+.cbody{min-height:50px;max-height:200px;overflow-y:auto}
 .ci{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
-.cin{flex:1;font-size:13px;line-height:1.3}
+.cin{flex:1;font-size:13px}
 .qc{display:flex;align-items:center;gap:6px}
-.qb{width:28px;height:28px;border-radius:7px;border:1px solid var(--b);background:var(--s2);color:var(--t1);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.qb:active{background:var(--b)}
+.qb{width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);background:var(--c2);color:var(--t1);font-size:16px;display:flex;align-items:center;justify-content:center}
 .qn{font-size:15px;font-weight:700;width:22px;text-align:center}
-.cip{font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--yellow);min-width:65px;text-align:right}
-.db{background:none;border:none;color:var(--t2);font-size:15px;cursor:pointer;padding:4px}
+.qp{font-size:17px;font-weight:900;color:var(--yel);min-width:65px;text-align:right}
+.crem{background:none;border:none;color:var(--t2);font-size:15px;padding:4px}
 .cem{text-align:center;padding:20px;color:var(--t2);font-size:13px}
+.ctot{border-top:1px solid var(--bd);padding:12px 16px}
+.ctrow{display:flex;justify-content:space-between;font-size:13px;color:var(--t2);margin-bottom:4px}
+.ctrow.disc{color:var(--grn)}
+.ctbig{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:8px;border-top:1px solid var(--bd)}
+.ctlbl{font-size:14px;font-weight:700}
+.ctamt{font-size:36px;font-weight:900;color:var(--yel)}
+.cpay{border-top:1px solid var(--bd);padding:14px 16px}
+.cplbl{font-size:11px;color:var(--t2);letter-spacing:1px;margin-bottom:10px}
+.pbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.pb{padding:12px 4px;border-radius:10px;border:2px solid var(--bd);background:var(--c2);color:var(--t2);font-size:11px;font-weight:700;text-align:center}
+.pb .pi{font-size:20px;display:block;margin-bottom:3px}
+.pb.cash.on{border-color:var(--grn);color:var(--grn);background:rgba(0,214,143,.1)}
+.pb.card.on{border-color:var(--blu);color:var(--blu);background:rgba(61,139,255,.1)}
+.pb.bank.on{border-color:var(--yel);color:var(--yel);background:rgba(255,179,0,.1)}
+.cobrar{width:100%;background:var(--grn);border:none;border-radius:12px;padding:17px;font-size:18px;font-weight:900;color:#000;letter-spacing:1px}
+.cobrar:disabled{background:var(--t3);color:var(--t2);cursor:not-allowed}
 
-.dsc{border-top:1px solid var(--b);padding:12px 16px}
-.dsh{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--t2);cursor:pointer}
-.dsh.on{color:var(--yellow)}
-.dsb{display:none;margin-top:12px}
+/* ── Discount ── */
+.dsc{border-top:1px solid var(--bd);padding:10px 16px}
+.dsh{display:flex;justify-content:space-between;font-size:13px;color:var(--t2);cursor:pointer}
+.dsh.on{color:var(--yel)}
+.dsb{display:none;margin-top:10px}
 .dsb.open{display:block}
-.dsbtns{display:flex;gap:8px;margin-bottom:10px}
-.dsbt{flex:1;padding:10px;border-radius:9px;border:1px solid var(--b);background:var(--s2);color:var(--t2);font-size:13px;cursor:pointer}
-.dsbt.on{border-color:var(--yellow);color:var(--yellow);background:rgba(255,179,0,.1)}
+.dsbtns{display:flex;gap:8px;margin-bottom:8px}
+.dsbt{flex:1;padding:9px;border-radius:8px;border:1px solid var(--bd);background:var(--c2);color:var(--t2);font-size:13px}
+.dsbt.on{border-color:var(--yel);color:var(--yel)}
 .dsr{display:flex;gap:8px;align-items:center}
 .dsr input{flex:1}
-.apb{background:var(--yellow);border:none;border-radius:9px;padding:12px 14px;color:#000;font-weight:700;cursor:pointer;white-space:nowrap}
-.ndt{font-size:12px;color:var(--t2);font-style:italic;padding:4px 0}
+.dap{background:var(--yel);border:none;border-radius:8px;padding:11px 14px;color:#000;font-weight:700}
 
-.tsec{border-top:1px solid var(--b);padding:12px 16px}
-.tr2{display:flex;justify-content:space-between;font-size:13px;color:var(--t2);margin-bottom:5px}
-.tr2.d{color:var(--green)}
-.tf{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:8px;border-top:1px solid var(--b)}
-.tl{font-size:14px;font-weight:700}
-.ta{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--yellow);letter-spacing:2px}
-
-.psec{border-top:1px solid var(--b);padding:14px 16px}
-.pl{font-size:11px;color:var(--t2);letter-spacing:1.5px;margin-bottom:10px}
-.pbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.pb{padding:12px 4px;border-radius:11px;border:2px solid var(--b);background:var(--s2);color:var(--t2);font-size:12px;font-weight:700;cursor:pointer;text-align:center;transition:.2s}
-.pb .pi{font-size:20px;display:block;margin-bottom:3px}
-.pb.cash.on{border-color:var(--green);color:var(--green);background:rgba(0,214,143,.1)}
-.pb.card.on{border-color:var(--blue);color:var(--blue);background:rgba(61,139,255,.1)}
-.pb.bank.on{border-color:var(--yellow);color:var(--yellow);background:rgba(255,179,0,.1)}
-.cobrar{width:100%;background:var(--green);border:none;border-radius:13px;padding:17px;font-size:17px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#000;cursor:pointer;letter-spacing:2px;transition:.2s}
-.cobrar:disabled{background:var(--b);color:var(--t2);cursor:not-allowed}
-.cobrar:not(:disabled):active{transform:scale(.98)}
-
-.ii{background:var(--s1);border:1px solid var(--b);border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+/* ── Inventario ── */
+.ii{background:var(--c1);border:1px solid var(--bd);border-radius:var(--r);padding:13px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
 .ii.low{border-color:rgba(255,179,0,.4)}
 .ii.out{border-color:rgba(255,59,92,.4)}
 .iin{flex:1}
-.iinm{font-size:14px;font-weight:700;margin-bottom:3px}
-.iic{font-size:11px;color:var(--t2)}
-.iis{font-family:'Bebas Neue',sans-serif;font-size:24px}
-.iis.ok{color:var(--green)}.iis.low{color:var(--yellow)}.iis.out{color:var(--red)}
+.iinm{font-size:14px;font-weight:700;margin-bottom:2px}
+.iicat{font-size:11px;color:var(--t2)}
+.iis{font-size:24px;font-weight:900}
+.iis.ok{color:var(--grn)}.iis.low{color:var(--yel)}.iis.out{color:var(--red)}
 .iip{font-size:12px;color:var(--t2);text-align:right}
+@media(min-width:768px){#tc-inv .p14{columns:2;column-gap:14px}.ii{break-inside:avoid}}
 
+/* ── Ventas ── */
 .sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.sc{background:var(--s1);border:1px solid var(--b);border-radius:13px;padding:14px}
-.scl{font-size:10px;color:var(--t2);letter-spacing:1px;margin-bottom:5px}
-.scv{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px}
-.si{background:var(--s1);border:1px solid var(--b);border-radius:12px;padding:13px 16px;margin-bottom:8px}
-.sit{display:flex;justify-content:space-between;margin-bottom:5px}
-.stm{font-size:11px;color:var(--t2)}
-.sam{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--yellow)}
-.sdt{font-size:12px;color:var(--t2);margin-bottom:5px}
-.pbg{font-size:11px;padding:2px 8px;border-radius:6px;display:inline-block}
-.pbg.ef{background:rgba(0,214,143,.12);color:var(--green)}
-.pbg.ta{background:rgba(61,139,255,.12);color:var(--blue)}
-.pbg.tr{background:rgba(255,179,0,.12);color:var(--yellow)}
+@media(min-width:768px){.sg{grid-template-columns:repeat(4,1fr)}}
+.sc{background:var(--c1);border:1px solid var(--bd);border-radius:var(--r);padding:14px}
+.scl{font-size:10px;color:var(--t2);letter-spacing:1px;margin-bottom:4px}
+.scv{font-size:26px;font-weight:900}
+.si{background:var(--c1);border:1px solid var(--bd);border-radius:var(--r);padding:13px 16px;margin-bottom:8px}
+.sirow{display:flex;justify-content:space-between;margin-bottom:4px}
+.sitime{font-size:11px;color:var(--t2)}
+.siamt{font-size:20px;font-weight:900;color:var(--yel)}
+.sidt{font-size:12px;color:var(--t2);margin-bottom:4px}
+.sipay{font-size:11px;padding:2px 8px;border-radius:5px;display:inline-block}
+.sipay.ef{background:rgba(0,214,143,.12);color:var(--grn)}
+.sipay.ta{background:rgba(61,139,255,.12);color:var(--blu)}
+.sipay.tr{background:rgba(255,179,0,.12);color:var(--yel)}
 
-.esec{background:var(--s1);border:1px solid var(--b);border-radius:15px;overflow:hidden;margin-bottom:12px}
-.esh{padding:13px 16px;border-bottom:1px solid var(--b);font-weight:700;font-size:14px}
-.esb{padding:14px;display:flex;flex-direction:column;gap:11px}
+/* ── Entrada ── */
+.esec{background:var(--c1);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.esh{padding:13px 16px;border-bottom:1px solid var(--bd);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+.esb{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .erow{display:flex;gap:10px}
 .erow>div{flex:1}
-.el{font-size:10px;color:var(--t2);letter-spacing:1px;margin-bottom:5px}
-.epr{background:var(--s2);border:1px solid var(--b);border-radius:11px;padding:12px;margin-bottom:8px}
-.ept{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.epn{flex:1;font-size:13px;font-weight:700}
-.eprm{background:none;border:none;color:var(--t2);font-size:17px;cursor:pointer}
-.epf{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
-.epl{font-size:9px;color:var(--t2);margin-bottom:3px}
-.epi{background:var(--bg);border:1px solid var(--b);border-radius:7px;padding:9px 8px;color:var(--t1);font-size:14px;font-family:'DM Sans',sans-serif;width:100%;outline:none}
-.epi:focus{border-color:var(--green)}
-.epc{font-size:10px;color:var(--green);text-align:right;margin-top:5px}
-.addb{width:100%;background:var(--s2);border:1px dashed var(--b);border-radius:11px;padding:13px;color:var(--t2);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;text-align:center}
-.addb:active{border-color:var(--green);color:var(--green)}
-.esum{background:var(--s2);border-radius:11px;padding:13px;display:flex;flex-direction:column;gap:7px}
+.el{font-size:10px;color:var(--t2);letter-spacing:.8px;margin-bottom:4px}
+.enote{font-size:10px;color:var(--blu);margin-top:2px}
+.epi{background:var(--c2);border:1px solid var(--bd);border-radius:8px;padding:10px 11px;color:var(--t1);font-size:14px;font-family:inherit;width:100%;outline:none}
+.epi:focus{border-color:var(--grn)}
+.epi:disabled{opacity:.5}
+.eprod{background:var(--c2);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:8px}
+.eprname{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.epfields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.epfl{font-size:9px;color:var(--t2);margin-bottom:3px}
+.epcost{font-size:10px;color:var(--grn);text-align:right;margin-top:4px}
+.addbtn{width:100%;background:var(--c2);border:1px dashed var(--bd);border-radius:10px;padding:13px;color:var(--t2);font-size:14px;text-align:center}
+.addbtn:active{border-color:var(--grn);color:var(--grn)}
+.esum{background:var(--c2);border-radius:10px;padding:13px;display:flex;flex-direction:column;gap:6px}
 .esr{display:flex;justify-content:space-between;font-size:13px;color:var(--t2)}
 .esr.b{color:var(--t1);font-weight:700}
-.esr.pos{color:var(--green);font-weight:700}
+.esr.pos{color:var(--grn);font-weight:700}
 .esr.neg{color:var(--red);font-weight:700}
-.esep{border-top:1px solid var(--b);margin:3px 0}
-.regbtn{width:100%;background:var(--green);border:none;border-radius:13px;padding:17px;font-size:17px;font-weight:700;font-family:'Bebas Neue',sans-serif;color:#000;cursor:pointer;letter-spacing:2px}
-.regbtn:disabled{background:var(--b);color:var(--t2);cursor:not-allowed}
-.noa{text-align:center;padding:48px 24px;color:var(--t2)}
+.esep{border-top:1px solid var(--bd);margin:3px 0}
+.regbtn{width:100%;background:var(--grn);border:none;border-radius:12px;padding:17px;font-size:18px;font-weight:900;color:#000;letter-spacing:1px;margin-top:4px}
+.regbtn:disabled{background:var(--t3);color:var(--t2);cursor:not-allowed}
+@media(min-width:768px){
+  #tc-entrada .p14{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+  #lotListPanel{display:block!important}
+}
+.lotcard{background:var(--c2);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;cursor:pointer;margin-bottom:8px}
+.lotcard:hover{border-color:var(--blu)}
+.lctop{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.lcid{font-weight:700;font-size:14px}
+.lcitems{font-size:11px;color:var(--t2)}
+.lcinfo{font-size:12px;color:var(--t2)}
+.modetabs{display:flex;gap:8px;margin-bottom:14px}
+.mtab{flex:1;padding:10px;border:2px solid var(--bd);border-radius:10px;background:var(--c2);color:var(--t2);font-size:12px;font-weight:700;text-align:center}
+.mtab.on{border-color:var(--grn);color:var(--grn);background:rgba(0,214,143,.08)}
+.mtab.onedit{border-color:var(--blu);color:var(--blu);background:rgba(61,139,255,.08)}
 
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
-.ov.open{display:flex}
-.mod{background:var(--s1);border:1px solid var(--b);border-radius:22px;padding:28px 22px;width:100%;max-width:360px;text-align:center}
-.mic{font-size:52px;margin-bottom:14px}
-.mtl{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;margin-bottom:6px}
-.mam{font-family:'Bebas Neue',sans-serif;font-size:50px;color:var(--yellow);margin-bottom:4px}
-.msb{font-size:13px;color:var(--t2);margin-bottom:18px}
-.mrc{background:var(--s2);border-radius:11px;padding:14px;margin-bottom:20px;text-align:left}
-.rr{display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:5px}
-.rr.tot{color:var(--t1);font-weight:700;border-top:1px solid var(--b);padding-top:7px;margin-top:3px}
-
-.pick{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:flex-end;z-index:101}
+/* ── Picker Overlay ── */
+.pick{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:flex-end;z-index:100}
+@media(min-width:768px){.pick{align-items:center;justify-content:center}}
 .pick.open{display:flex}
-.picksh{background:var(--s1);border-radius:20px 20px 0 0;padding:18px;width:100%;max-height:75vh;display:flex;flex-direction:column}
-.pickh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.pickt{font-weight:700;font-size:16px}
-.pickc{background:none;border:none;color:var(--t2);font-size:22px;cursor:pointer}
-.picksr{display:flex;gap:8px;margin-bottom:8px}
-.picksr input{flex:1}
-.pscb{background:var(--red);border:none;border-radius:9px;width:44px;font-size:18px;cursor:pointer;flex-shrink:0}
-.pickmsg{font-size:12px;text-align:center;padding:4px;min-height:18px}
-.pickl{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px}
-.pki{padding:12px 13px;border-radius:9px;background:var(--s2);cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid transparent}
-.pki:active{border-color:var(--green)}
+.picksh{background:var(--c1);border-radius:20px 20px 0 0;padding:18px;width:100%;max-height:75vh;display:flex;flex-direction:column}
+@media(min-width:768px){.picksh{border-radius:18px;max-width:580px;max-height:80vh}}
+.pickhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.picktitle{font-weight:700;font-size:16px}
+.pickcl{background:none;border:none;color:var(--t2);font-size:22px}
+.picksearch{display:flex;gap:8px;margin-bottom:8px}
+.picksearch input{flex:1}
+.pickcambtn{background:var(--red);border:none;border-radius:9px;width:44px;font-size:18px;flex-shrink:0}
+.picklist{overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px}
+.pki{padding:12px 13px;border-radius:9px;background:var(--c2);cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid transparent}
+.pki:active,.pki:hover{border-color:var(--grn)}
 .pkn{font-size:14px;font-weight:700}
 .pkc{font-size:11px;color:var(--t2);margin-top:2px}
 .pks{font-size:12px;color:var(--t2)}
 
+/* ── Scanner ── */
 .scanmod{position:fixed;inset:0;background:#000;display:none;flex-direction:column;z-index:200}
 .scanmod.open{display:flex}
 #scanReg{width:100%;flex:1}
 .scanbot{padding:16px;background:rgba(0,0,0,.75)}
-.scanbot p{font-size:13px;color:rgba(255,255,255,.6);text-align:center;margin-bottom:10px}
-.scanman{display:flex;gap:8px}
-.scanman input{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:9px;padding:12px 14px;color:#fff;font-size:16px;font-family:'DM Sans',sans-serif;outline:none}
-.scanman button{background:var(--red);border:none;border-radius:9px;padding:12px 18px;color:#fff;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer}
+.scanhint{font-size:12px;color:rgba(255,255,255,.6);text-align:center;margin-bottom:10px}
+.scanmanual{display:flex;gap:8px}
+.scanmanual input{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:12px 14px;color:#fff;font-size:16px;font-family:inherit;outline:none}
+.scanmanual button{background:var(--red);border:none;border-radius:9px;padding:12px 18px;color:#fff;font-weight:700}
 .scancl{position:absolute;top:48px;right:16px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.2);border-radius:50%;width:42px;height:42px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:201}
 
+/* ── Success Modal ── */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal.open{display:flex}
+.modbox{background:var(--c1);border:1px solid var(--bd);border-radius:22px;padding:28px 22px;width:100%;max-width:360px;text-align:center}
+.modic{font-size:52px;margin-bottom:14px}
+.modtl{font-size:28px;font-weight:900;letter-spacing:2px;margin-bottom:6px}
+.modamt{font-size:48px;font-weight:900;color:var(--yel);margin-bottom:4px}
+.modsub{font-size:13px;color:var(--t2);margin-bottom:18px}
+.modrec{background:var(--c2);border-radius:10px;padding:14px;margin-bottom:20px;text-align:left}
+.recrow{display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:5px}
+.recrow.tot{color:var(--t1);font-weight:700;border-top:1px solid var(--bd);padding-top:6px;margin-top:4px}
+
+/* ── Misc ── */
 .loading{text-align:center;padding:32px;color:var(--t2);font-size:14px}
-.hidden{display:none!important}
-.mt{margin-top:8px}
-
-/* ── PC向けレスポンシブデザイン ── */
-@media (min-width: 768px) {
-  :root {
-    --bg:#f0f2f7;--s1:#ffffff;--s2:#f8f9fc;--b:#e0e4ef;
-    --red:#e8334a;--yellow:#f59e0b;--green:#10b981;--blue:#3b82f6;
-    --t1:#1a1a2e;--t2:#6b7280;
-  }
-  html,body{overflow:auto;background:var(--bg)}
-  #app{position:relative;min-height:100vh;flex-direction:column;}
-  .topbar{background:var(--s1);border-bottom:2px solid var(--b);padding:12px 32px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-  .tlogo{font-size:26px;letter-spacing:4px;color:var(--t1)}
-  .tabs{background:var(--s1);border-bottom:2px solid var(--b);padding:0 32px;gap:4px}
-  .tab{padding:14px 24px;font-size:13px;font-weight:700;flex:none;border-radius:8px 8px 0 0;letter-spacing:.5px}
-  .tab.on{color:var(--red);border-bottom-color:var(--red);background:rgba(232,51,74,.05)}
-  .tc{overflow-y:auto;height:calc(100vh - 110px)}
-  .p{padding:24px 32px;max-width:1200px;margin:0 auto}
-
-  /* Caja - 2カラムレイアウト */
-  #tc-caja .p{display:grid;grid-template-columns:1fr 420px;gap:24px;align-items:start}
-  .pgrid{grid-template-columns:repeat(3,1fr);gap:12px}
-  .pc{padding:16px;border-radius:14px}
-  .pn{font-size:14px}
-  .ppr{font-size:26px}
-  .cs{position:sticky;top:0;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
-  .ch{padding:16px 20px;font-size:15px}
-  .cbody{max-height:260px}
-  .tsec{padding:16px 20px}
-  .ta{font-size:42px}
-  .psec{padding:16px 20px}
-  .cobrar{padding:18px;font-size:18px;border-radius:14px}
-
-  /* Inventario */
-  #tc-inv .p{columns:2;column-gap:16px}
-  .ii{break-inside:avoid;margin-bottom:12px;border-radius:14px;padding:16px 20px}
-
-  /* Ventas */
-  .sg{grid-template-columns:repeat(4,1fr);gap:14px}
-  .sc{padding:20px;border-radius:14px}
-  .scv{font-size:32px}
-  .si{border-radius:14px;padding:16px 20px;margin-bottom:10px}
-
-  /* Entrada - 2カラム */
-  #tc-entrada .p{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
-  .esec{border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:14px}
-  .esh{padding:16px 20px;font-size:15px;background:var(--s2);border-bottom:1px solid var(--b)}
-  .esb{padding:18px 20px;gap:14px}
-  .erow{gap:14px}
-  .epr{border-radius:13px;padding:16px}
-  .epf{grid-template-columns:1fr 1fr 1fr;gap:10px}
-  .epi{padding:11px 12px;font-size:14px;border-radius:9px}
-  .esum{padding:16px;gap:9px}
-  .esr{font-size:14px}
-  .regbtn{padding:18px;font-size:18px;border-radius:14px;margin-top:4px}
-  .addb{padding:15px;border-radius:12px;font-size:14px}
-
-  /* Picker - モーダルをセンタリング */
-  .pick{align-items:center;justify-content:center}
-  .picksh{border-radius:20px;max-width:600px;max-height:80vh}
-  .pki{border-radius:11px;padding:14px 16px}
-  .pkn{font-size:15px}
-
-  /* ロット編集パネル */
-  #editPanel{display:block}
-
-  input,select{background:var(--s2);border-color:var(--b);color:var(--t1);border-radius:10px;padding:11px 14px;font-size:14px}
-  input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
-  .nbadge{background:rgba(16,185,129,.1);color:var(--green);border-color:rgba(16,185,129,.3)}
-  .nbadge.off{background:rgba(232,51,74,.1);color:var(--red);border-color:rgba(232,51,74,.3)}
-  .obtn{border-color:var(--b);color:var(--t2);border-radius:9px;padding:7px 14px}
-  .sbadge{color:var(--t2)}
-  .card{box-shadow:0 8px 32px rgba(0,0,0,.1);border:none}
-  .logo{color:var(--t1)}
-  .sub{color:var(--t2)}
-  .pk{background:var(--s2);border-color:var(--b);color:var(--t1)}
-  .pk:active{background:var(--b)}
-  .pk.go{background:var(--red);color:#fff}
-  .dot{border-color:var(--b)}
-  .dot.on{background:var(--red);border-color:var(--red)}
-}
+.hide{display:none!important}
 </style>
 </head>
 <body>
 
 <!-- SETUP -->
-<div id="setupScreen" class="screen">
-  <div class="logo">ANIME<span>POS</span></div>
+<div id="scSetup" class="scr">
+  <div class="logo">ANIME<em>POS</em></div>
   <div class="sub">MERCADO SYSTEM</div>
   <div class="card">
-    <div class="lbl">URL de Google Apps Script</div>
-    <input id="gasIn" type="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
-    <div class="errtxt" id="setupErr"></div>
-    <button class="btn" onclick="doConnect()">Conectar y comenzar</button>
+    <div class="lbl">URL DE GOOGLE APPS SCRIPT</div>
+    <input id="gasUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+    <div class="err" id="setupErr"></div>
+    <button class="btn" onclick="doConnect()">CONECTAR</button>
   </div>
 </div>
 
 <!-- LOGIN -->
-<div id="loginScreen" class="screen hidden">
-  <div class="logo">ANIME<span>POS</span></div>
-  <div class="sub">MERCADO SYSTEM</div>
+<div id="scLogin" class="scr hide">
+  <div class="logo">ANIME<em>POS</em></div>
+  <div class="sub">INICIAR SESIÓN</div>
   <div class="card">
-    <div class="lbl">Seleccionar empleado</div>
-    <select id="staffSel" onchange="onStaffSel(this.value)" style="margin-bottom:18px">
+    <div class="lbl">EMPLEADO</div>
+    <select id="staffSel" onchange="onStaffSel(this.value)" style="margin-bottom:16px">
       <option value="">-- Selecciona tu nombre --</option>
     </select>
-    <div class="lbl">Ingresar PIN</div>
-    <div class="pdots">
+    <div class="lbl">PIN</div>
+    <div class="dots" id="dots">
       <div class="dot" id="d0"></div><div class="dot" id="d1"></div>
       <div class="dot" id="d2"></div><div class="dot" id="d3"></div>
     </div>
@@ -324,54 +279,64 @@ input:focus,select:focus{border-color:var(--red)}
       <div class="pk" onclick="pk('1')">1</div><div class="pk" onclick="pk('2')">2</div><div class="pk" onclick="pk('3')">3</div>
       <div class="pk" onclick="pk('4')">4</div><div class="pk" onclick="pk('5')">5</div><div class="pk" onclick="pk('6')">6</div>
       <div class="pk" onclick="pk('7')">7</div><div class="pk" onclick="pk('8')">8</div><div class="pk" onclick="pk('9')">9</div>
-      <div class="pk del" onclick="pkd()">⌫</div><div class="pk" onclick="pk('0')">0</div><div class="pk go" onclick="pke()">→</div>
+      <div class="pk del" onclick="pkDel()">⌫</div><div class="pk" onclick="pk('0')">0</div><div class="pk go" onclick="pkEnter()">→</div>
     </div>
-    <div class="errtxt" id="loginErr"></div>
+    <div class="err" id="loginErr"></div>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app">
   <div class="topbar">
-    <div class="tlogo">ANIME<span>POS</span></div>
-    <div class="tr">
+    <div class="tl">ANIME<em>POS</em></div>
+    <div style="display:flex;align-items:center;gap:10px">
       <div class="nbadge" id="nb">● En línea</div>
-      <div class="sbadge" id="sb"></div>
-      <button class="obtn" onclick="doLogout()">Salir</button>
+      <span id="staffBadge" style="font-size:12px;color:var(--t2)"></span>
+      <button onclick="doLogout()" style="background:none;border:1px solid var(--bd);border-radius:8px;padding:5px 10px;color:var(--t2);font-size:12px">Salir</button>
     </div>
   </div>
   <div class="tabs">
-    <div class="tab on" id="tab-caja" onclick="goTab('caja')"><span class="ti">🛒</span>Caja</div>
-    <div class="tab" id="tab-inv" onclick="goTab('inv')"><span class="ti">📦</span>Inventario</div>
-    <div class="tab" id="tab-ventas" onclick="goTab('ventas')"><span class="ti">📊</span>Ventas</div>
-    <div class="tab" id="tab-entrada" onclick="goTab('entrada')"><span class="ti">📥</span>Entrada</div>
+    <div class="tab on" id="tab-caja" onclick="goTab('caja')"><span class="ic">🛒</span>Caja</div>
+    <div class="tab" id="tab-inv" onclick="goTab('inv')"><span class="ic">📦</span>Inventario</div>
+    <div class="tab" id="tab-ventas" onclick="goTab('ventas')"><span class="ic">📊</span>Ventas</div>
+    <div class="tab" id="tab-entrada" onclick="goTab('entrada')"><span class="ic">📥</span>Entrada</div>
   </div>
 
   <!-- CAJA -->
-  <div class="tc" id="tc-caja">
-    <div class="p">
-      <div class="srow">
-        <input id="pSearch" type="text" placeholder="Buscar producto o código..." oninput="filtP()">
-        <button class="sbtn" onclick="openScan('caja')">📷</button>
+  <div class="pane" id="tc-caja">
+    <div class="p14">
+      <div>
+        <div class="srow">
+          <input id="pSearch" placeholder="Buscar producto..." oninput="filterProds(this.value)">
+          <button class="scnbtn" onclick="openScan('caja')">📷</button>
+        </div>
+        <div class="pgrid" id="prodGrid"><div class="loading">Cargando...</div></div>
       </div>
-      <div class="pgrid" id="pGrid"><div class="loading">Cargando productos...</div></div>
-      <div class="cs">
-        <div class="ch">
-          <span>🛒 Carrito <span id="cbadge" style="color:var(--red)"></span></span>
-          <button class="cb2" onclick="clearCart()">Limpiar</button>
+      <div class="cart">
+        <div class="chead">
+          <span>🛒 Carrito <span id="cartBadge" style="color:var(--red)"></span></span>
+          <button class="cclear" onclick="clearCart()">Limpiar</button>
         </div>
-        <div class="cbody" id="cbody"><div class="cem">Selecciona un producto</div></div>
+        <div class="cbody" id="cartBody"><div class="cem">Selecciona un producto</div></div>
         <div class="dsc">
-          <div class="dsh" id="dsh" onclick="togDisc()"><span>🏷️ Agregar descuento</span><span id="dchev">▼</span></div>
-          <div class="dsb" id="dsb"><div id="dcont"></div></div>
+          <div class="dsh" id="discHead" onclick="togDisc()"><span>🏷️ Descuento</span><span id="discChev">▼</span></div>
+          <div class="dsb" id="discBody">
+            <div class="dsbtns">
+              <button class="dsbt" id="dbt-pct" onclick="setDiscType('pct')">% Porcentaje</button>
+              <button class="dsbt" id="dbt-fix" onclick="setDiscType('fix')">MXN Fijo</button>
+            </div>
+            <div class="dsr">
+              <input id="discVal" type="number" placeholder="0" oninput="applyDisc()">
+            </div>
+          </div>
         </div>
-        <div class="tsec">
-          <div class="tr2"><span>Subtotal</span><span id="tSub">MXN 0</span></div>
-          <div class="tr2 d hidden" id="tDR"><span id="tDL">Descuento</span><span id="tD"></span></div>
-          <div class="tf"><span class="tl">Total</span><span class="ta" id="tTot">MXN 0</span></div>
+        <div class="ctot">
+          <div class="ctrow"><span>Subtotal</span><span id="tSub">MXN 0</span></div>
+          <div class="ctrow disc hide" id="tDiscRow"><span id="tDiscLbl">Descuento</span><span id="tDisc"></span></div>
+          <div class="ctbig"><span class="ctlbl">TOTAL</span><span class="ctamt" id="tTot">MXN 0</span></div>
         </div>
-        <div class="psec">
-          <div class="pl">Método de pago</div>
+        <div class="cpay">
+          <div class="cplbl">MÉTODO DE PAGO</div>
           <div class="pbs">
             <button class="pb cash" onclick="selPay('efectivo')"><span class="pi">💵</span>Efectivo</button>
             <button class="pb card" onclick="selPay('tarjeta')"><span class="pi">💳</span>Tarjeta</button>
@@ -384,159 +349,147 @@ input:focus,select:focus{border-color:var(--red)}
   </div>
 
   <!-- INVENTARIO -->
-  <div class="tc hidden" id="tc-inv">
-    <div class="p">
-      <input type="text" placeholder="Buscar por nombre o categoría..." oninput="filtI(this.value)" style="margin-bottom:12px">
-      <div id="invL"><div class="loading">Cargando inventario...</div></div>
+  <div class="pane hide" id="tc-inv">
+    <div class="p14">
+      <input placeholder="Buscar por nombre o categoría..." oninput="filterInv(this.value)" style="margin-bottom:12px">
+      <div id="invList"><div class="loading">Cargando...</div></div>
     </div>
   </div>
 
   <!-- VENTAS -->
-  <div class="tc hidden" id="tc-ventas">
-    <div class="p">
+  <div class="pane hide" id="tc-ventas">
+    <div class="p14">
       <div class="sg">
-        <div class="sc"><div class="scl">Ventas de hoy</div><div class="scv" id="sv1" style="color:var(--green)">MXN 0</div></div>
-        <div class="sc"><div class="scl">Transacciones</div><div class="scv" id="sv2" style="color:var(--yellow)">0</div></div>
-        <div class="sc"><div class="scl">Total descuentos</div><div class="scv" id="sv3" style="color:var(--red)">MXN 0</div></div>
-        <div class="sc"><div class="scl">Sin sincronizar</div><div class="scv" id="sv4" style="color:var(--t2)">0</div></div>
+        <div class="sc"><div class="scl">VENTAS HOY</div><div class="scv" id="sv1" style="color:var(--grn)">MXN 0</div></div>
+        <div class="sc"><div class="scl">TRANSACCIONES</div><div class="scv" id="sv2" style="color:var(--yel)">0</div></div>
+        <div class="sc"><div class="scl">DESCUENTOS</div><div class="scv" id="sv3" style="color:var(--red)">MXN 0</div></div>
+        <div class="sc"><div class="scl">SIN SYNC</div><div class="scv" id="sv4" style="color:var(--t2)">0</div></div>
       </div>
-      <div id="salesL"><div style="text-align:center;color:var(--t2);padding:24px;font-size:13px">No hay ventas registradas</div></div>
+      <div id="saleList"><div class="loading">Sin ventas</div></div>
     </div>
   </div>
 
   <!-- ENTRADA -->
-  <div class="tc hidden" id="tc-entrada">
-    <div class="p">
-      <!-- 左カラム：新規登録 -->
+  <div class="pane hide" id="tc-entrada">
+    <div class="p14">
+      <!-- Left: Form -->
       <div>
-        <div id="eAccess">
-          <!-- モード切替 -->
-          <div style="display:flex;gap:8px;margin-bottom:14px">
-            <button id="modeNewBtn" onclick="setEntradaMode('new')" style="flex:1;padding:10px;border:2px solid var(--green);border-radius:10px;background:rgba(16,185,129,.1);color:var(--green);font-weight:700;font-size:13px;cursor:pointer">🆕 Nuevo lote</button>
-            <button id="modeEditBtn" onclick="setEntradaMode('edit')" style="flex:1;padding:10px;border:2px solid var(--b);border-radius:10px;background:var(--s2);color:var(--t2);font-weight:700;font-size:13px;cursor:pointer">✏️ Editar lote</button>
-          </div>
-
-          <!-- 既存ロット選択（編集モード） -->
-          <div id="editLotSel" class="esec" style="display:none">
-            <div class="esh">✏️ Seleccionar lote a editar</div>
-            <div class="esb">
-              <div style="display:flex;gap:8px;align-items:flex-end">
-                <div style="flex:1">
-                  <div class="el">ID de lote existente</div>
-                  <input id="editLotId" type="text" placeholder="Ej: LOT001 ó 250-0459354-..." onkeydown="if(event.key==='Enter')doLoadLot()">
-                </div>
-                <button onclick="doLoadLot()" style="background:var(--blue);border:none;color:white;border-radius:9px;padding:11px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap">🔍 読み込む</button>
-              </div>
-              <div id="editLotInfo" style="font-size:12px;color:var(--t2)"></div>
-            </div>
-          </div>
-
-          <div class="esec">
-            <div class="esh">📋 Información del lote</div>
-            <div class="esb">
-              <div class="erow">
-                <div><div class="el">ID de lote</div><input id="eLot" type="text" placeholder="LOT001" oninput="calcE()"></div>
-                <div><div class="el">Fecha de pedido</div><input id="eFecha" type="date" oninput="calcE();fetchRateForDate(this.value)"></div>
-              </div>
-              <div class="erow">
-                <div><div class="el">Fecha de llegada</div><input id="eFechaArr" type="date" oninput="calcE()"></div>
-                <div><div class="el">Tipo de cambio (JPY→MXN)</div><input id="eRate" type="number" step="0.001" placeholder="0.130" oninput="calcE()"></div>
-              </div>
-              <div class="erow">
-                <div>
-                  <div class="el">Envío + impuestos (JPY・円)</div>
-                  <input id="eShip" type="number" placeholder="2000" oninput="calcE()">
-                  <div style="font-size:10px;color:var(--blue);margin-top:3px">※ Ingresar en yenes japoneses (JPY)</div>
-                </div>
-                <div>
-                  <div class="el">Devolución impuestos (JPY・円)</div>
-                  <input id="eRef" type="number" placeholder="0" oninput="calcE()">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="esec" id="prodSecEl">
-            <div class="esh">📦 Productos recibidos</div>
-            <div class="esb">
-              <div id="eProdsEl"><div style="text-align:center;color:var(--t2);font-size:13px;padding:8px">Agrega productos al lote</div></div>
-              <button class="addb" onclick="openPick()">＋ Agregar producto</button>
-            </div>
-          </div>
-
-          <div class="esec">
-            <div class="esh">💰 Cálculo de costos</div>
-            <div class="esb">
-              <div class="esum">
-                <div class="esr"><span>Productos (tipos)</span><span id="es1">0</span></div>
-                <div class="esr"><span>Cantidad total</span><span id="es2">0 uds.</span></div>
-                <div class="esr"><span>Costo de compra total</span><span id="es3">MXN 0</span></div>
-                <div class="esr"><span>Envío + impuestos (JPY)</span><span id="es4">¥0 JPY</span></div>
-                <div class="esr"><span>Envío + impuestos (MXN)</span><span id="es4m">MXN 0</span></div>
-                <div class="esr"><span>Devolución (JPY)</span><span id="es5" style="color:var(--green)">¥0 JPY</span></div>
-                <div class="esep"></div>
-                <div class="esr b"><span>Precio venta total</span><span id="es6">MXN 0</span></div>
-                <div class="esr b"><span>Margen para envío</span><span id="es7">MXN 0</span></div>
-                <div class="esep"></div>
-                <div class="esr" id="es8r"><span>Resultado del lote</span><span id="es8">MXN 0</span></div>
-              </div>
-              <div style="font-size:11px;color:var(--t2);line-height:1.6;margin-top:6px">
-                ※ Margen = (Precio venta ÷ 2) − Costo compra<br>
-                ※ Resultado = Margen − Envío(MXN) + Devolución(MXN)
-              </div>
-            </div>
-          </div>
-          <button class="regbtn" id="regBtn" onclick="doReg()" disabled>REGISTRAR ENTRADA</button>
-          <div style="height:20px"></div>
+        <!-- Mode Tabs -->
+        <div class="modetabs">
+          <button class="mtab on" id="mt-new" onclick="setMode('new')">🆕 Nuevo lote</button>
+          <button class="mtab" id="mt-edit" onclick="setMode('edit')">✏️ Editar lote</button>
         </div>
-        <div id="eDenied" class="noa hidden">
-          <div style="font-size:48px;margin-bottom:14px">🔒</div>
-          <div style="font-size:16px;font-weight:700;margin-bottom:8px">Sin permiso de acceso</div>
-          <div style="font-size:13px">Solo el dueño o empleados senior</div>
+
+        <!-- Edit: Lot selector -->
+        <div class="esec hide" id="editSec">
+          <div class="esh">🔍 Seleccionar lote</div>
+          <div class="esb">
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <div style="flex:1">
+                <div class="el">ID DEL LOTE</div>
+                <input id="editLotId" class="epi" placeholder="Ej: LOT001 ó 250-0459354-..." onkeydown="if(event.key==='Enter')loadLot()">
+              </div>
+              <button onclick="loadLot()" style="background:var(--blu);border:none;color:#fff;border-radius:9px;padding:11px 16px;font-weight:700;font-size:13px;white-space:nowrap">読み込む</button>
+            </div>
+            <div id="loadLotMsg" style="font-size:12px;min-height:16px"></div>
+          </div>
         </div>
+
+        <!-- Lot Info -->
+        <div class="esec">
+          <div class="esh">📋 Información del lote</div>
+          <div class="esb">
+            <div class="erow">
+              <div>
+                <div class="el">ID DE LOTE</div>
+                <input id="eLotId" class="epi" placeholder="LOT001" oninput="calcE()">
+              </div>
+              <div>
+                <div class="el">FECHA DE PEDIDO</div>
+                <input id="eOrderDate" class="epi" type="date" onchange="calcE();autoRate()">
+              </div>
+            </div>
+            <div class="erow">
+              <div>
+                <div class="el">FECHA DE LLEGADA</div>
+                <input id="eArrDate" class="epi" type="date" oninput="calcE()">
+              </div>
+              <div>
+                <div class="el">TIPO DE CAMBIO (JPY→MXN)</div>
+                <input id="eRate" class="epi" type="number" step="0.001" placeholder="0.130" oninput="calcE()">
+                <div class="enote" id="rateNote">Cargando tipo de cambio...</div>
+              </div>
+            </div>
+            <div class="erow">
+              <div>
+                <div class="el">ENVÍO + IMPUESTOS (JPY・円)</div>
+                <input id="eShip" class="epi" type="number" placeholder="0" oninput="calcE()">
+                <div class="enote">※ Ingresar en yenes japoneses</div>
+              </div>
+              <div>
+                <div class="el">DEVOLUCIÓN IMPUESTOS (JPY・円)</div>
+                <input id="eRef" class="epi" type="number" placeholder="0" oninput="calcE()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products (new mode only) -->
+        <div class="esec" id="prodSec">
+          <div class="esh">📦 Productos recibidos</div>
+          <div class="esb">
+            <div id="eProdList"><div style="text-align:center;color:var(--t2);font-size:13px;padding:8px">Agrega productos</div></div>
+            <button class="addbtn" onclick="openPick()">＋ Agregar producto</button>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="esec">
+          <div class="esh">💰 Cálculo</div>
+          <div class="esb">
+            <div class="esum">
+              <div class="esr"><span>Productos</span><span id="es1">0</span></div>
+              <div class="esr"><span>Costo compra (MXN)</span><span id="es2">MXN 0</span></div>
+              <div class="esr"><span>Envío + impuestos (JPY)</span><span id="es3">¥0</span></div>
+              <div class="esr"><span>Envío + impuestos (MXN)</span><span id="es3m">MXN 0</span></div>
+              <div class="esr"><span>Devolución (JPY)</span><span id="es4">¥0</span></div>
+              <div class="esep"></div>
+              <div class="esr b"><span>Margen p/ envío (MXN)</span><span id="es5">MXN 0</span></div>
+              <div class="esr" id="es6row"><span>Resultado lote (MXN)</span><span id="es6">MXN 0</span></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="regbtn" id="regBtn" onclick="doReg()" disabled>REGISTRAR ENTRADA</button>
+        <div style="height:20px"></div>
       </div>
 
-      <!-- 右カラム：登録済みロット一覧（PC用） -->
-      <div id="editPanel" style="display:none">
+      <!-- Right: Lot list (PC only) -->
+      <div id="lotListPanel" style="display:none">
         <div class="esec">
-          <div class="esh">📋 Lotes registrados recientes</div>
+          <div class="esh">📋 Lotes registrados</div>
           <div class="esb">
-            <input type="text" placeholder="Buscar lote..." oninput="filtLots(this.value)" style="margin-bottom:8px">
-            <div id="lotListEl" style="max-height:600px;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
-              <div style="text-align:center;color:var(--t2);font-size:13px;padding:12px">Cargando lotes...</div>
-            </div>
+            <input placeholder="Buscar lote..." oninput="filterLots(this.value)" style="margin-bottom:6px">
+            <div id="lotList" style="max-height:600px;overflow-y:auto"><div class="loading">Cargando...</div></div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- SUCCESS -->
-<div class="ov" id="sucOv">
-  <div class="mod">
-    <div class="mic">✅</div>
-    <div class="mtl">¡Venta completada!</div>
-    <div class="mam" id="mAmt"></div>
-    <div class="msb" id="mSub"></div>
-    <div class="mrc" id="mRec"></div>
-    <button class="btn g" onclick="closeSuc()">Siguiente venta</button>
   </div>
 </div>
 
 <!-- PICKER -->
 <div class="pick" id="pickOv">
   <div class="picksh">
-    <div class="pickh">
-      <div class="pickt">Seleccionar producto</div>
-      <button class="pickc" onclick="closePick()">✕</button>
+    <div class="pickhead">
+      <div class="picktitle">Seleccionar producto</div>
+      <button class="pickcl" onclick="closePick()">✕</button>
     </div>
-    <div class="picksr">
-      <input id="pickIn" type="text" placeholder="Buscar por nombre, categoría, QR o ISBN..." oninput="filtPick(this.value)">
-      <button class="pscb" onclick="openScan('picker')">📷</button>
+    <div class="picksearch">
+      <input id="pickQ" placeholder="Buscar por nombre, categoría, ISBN..." oninput="filterPicker(this.value)">
+      <button class="pickcambtn" onclick="openScan('picker')">📷</button>
     </div>
-    <div class="pickmsg" id="pickMsg"></div>
-    <div class="pickl" id="pickL"></div>
+    <div class="picklist" id="pickList"></div>
   </div>
 </div>
 
@@ -545,742 +498,673 @@ input:focus,select:focus{border-color:var(--red)}
   <div id="scanReg"></div>
   <button class="scancl" onclick="closeScan()">✕</button>
   <div class="scanbot">
-    <p id="scanHint">Mantén el código centrado y quieto • Distancia: 10-15cm • Buena iluminación</p>
-    <div class="scanman">
-      <input id="scanMan" type="text" placeholder="O ingresa el código manualmente..." inputmode="numeric">
+    <div class="scanhint" id="scanHint">Mantén el código centrado • 10-15cm de distancia</div>
+    <div class="scanmanual">
+      <input id="scanInput" placeholder="O ingresa el código manualmente...">
       <button onclick="doManScan()">Buscar</button>
     </div>
   </div>
 </div>
 
+<!-- SUCCESS MODAL -->
+<div class="modal" id="sucModal">
+  <div class="modbox">
+    <div class="modic">✅</div>
+    <div class="modtl">¡VENTA!</div>
+    <div class="modamt" id="modAmt"></div>
+    <div class="modsub" id="modSub"></div>
+    <div class="modrec" id="modRec"></div>
+    <button class="btn g" onclick="closeSuc()">Siguiente venta</button>
+  </div>
+</div>
+
 <script>
-// ── STATE ──
-let GAS = localStorage.getItem('gas') || '';
-let prods = [], staff = [], me = null;
-let cart = [], payM = null;
-let dType = 'pct', dVal = 0, dOn = false;
-let sales = [], offline = JSON.parse(localStorage.getItem('offlineSales') || '[]');
-let isOnline = navigator.onLine;
-let scanCtx = '', qr = null;
-let ePs = [];
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let GAS    = localStorage.getItem('gasUrl') || '';
+let prods  = [];
+let staff  = [];
+let me     = null;
+let cart   = [];
+let payM   = null;
+let discType = 'pct';
+let discVal  = 0;
+let discOn   = false;
+let sales  = [];
+let offline= JSON.parse(localStorage.getItem('offlineSales') || '[]');
+let online = navigator.onLine;
+let scanCtx= '';
+let qrScanner = null;
+let eProds = [];
+let eMode  = 'new';
+let allLots= [];
 
-// ── BOOT ──
+// ═══════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════
 window.addEventListener('load', () => {
-  if (GAS) { show('login'); loadAll(); } else { show('setup'); }
-  netUpd();
+  if (GAS) { showScr('login'); loadData(); }
+  else      { showScr('setup'); }
+  updateNet();
 });
-window.addEventListener('online',  () => { isOnline = true;  netUpd(); syncOff(); });
-window.addEventListener('offline', () => { isOnline = false; netUpd(); });
+window.addEventListener('online',  () => { online = true;  updateNet(); syncOffline(); });
+window.addEventListener('offline', () => { online = false; updateNet(); });
 
-function show(s) {
-  document.getElementById('setupScreen').classList.toggle('hidden', s !== 'setup');
-  document.getElementById('loginScreen').classList.toggle('hidden', s !== 'login');
+function showScr(s) {
+  document.getElementById('scSetup').classList.toggle('hide', s !== 'setup');
+  document.getElementById('scLogin').classList.toggle('hide', s !== 'login');
   document.getElementById('app').style.display = s === 'app' ? 'flex' : 'none';
 }
-function netUpd() {
-  const b = document.getElementById('nb'); if (!b) return;
-  b.textContent = isOnline ? '● En línea' : '● Sin conexión';
-  b.classList.toggle('off', !isOnline);
+function updateNet() {
+  const b = document.getElementById('nb');
+  b.textContent = online ? '● En línea' : '● Sin conexión';
+  b.className   = 'nbadge' + (online ? '' : ' off');
+  document.getElementById('sv4').textContent = offline.length;
 }
 
-// ── SETUP ──
+// ═══════════════════════════════════════════════════
+// SETUP
+// ═══════════════════════════════════════════════════
 function doConnect() {
-  const u = document.getElementById('gasIn').value.trim();
-  const e = document.getElementById('setupErr');
-  if (!u) { e.textContent = 'Ingresa la URL'; return; }
-  if (!u.startsWith('https://')) { e.textContent = 'La URL debe comenzar con https://'; return; }
-  e.textContent = '';
-  GAS = u; localStorage.setItem('gas', u);
-  show('login'); loadAll();
+  const url = document.getElementById('gasUrl').value.trim();
+  const err = document.getElementById('setupErr');
+  if (!url || !url.startsWith('https://')) { err.textContent = 'Ingresa una URL válida'; return; }
+  err.textContent = '';
+  GAS = url;
+  localStorage.setItem('gasUrl', url);
+  showScr('login');
+  loadData();
 }
 
-// ── DATA ──
-async function loadAll() { await Promise.all([loadProds(), loadStaff()]); }
+// ═══════════════════════════════════════════════════
+// DATA LOADING
+// ═══════════════════════════════════════════════════
+async function loadData() {
+  await Promise.all([loadProds(), loadStaff()]);
+}
 
 async function loadProds() {
   try {
     const r = await fetch(GAS + '?action=getProducts');
     const d = await r.json();
-    if (d.products?.length) { prods = d.products; localStorage.setItem('cp', JSON.stringify(prods)); }
-  } catch { const c = localStorage.getItem('cp'); if (c) prods = JSON.parse(c); }
-  rendProds(); rendInv();
+    if (d.products && d.products.length) {
+      prods = d.products;
+      localStorage.setItem('cachedProds', JSON.stringify(prods));
+    }
+  } catch(e) {
+    const c = localStorage.getItem('cachedProds');
+    if (c) prods = JSON.parse(c);
+  }
+  renderProds();
+  renderInv();
 }
 
 async function loadStaff() {
   try {
     const r = await fetch(GAS + '?action=getStaff');
     const d = await r.json();
-    if (d.staff?.length) { staff = d.staff; localStorage.setItem('cs', JSON.stringify(staff)); }
-  } catch { const c = localStorage.getItem('cs'); if (c) staff = JSON.parse(c); }
-  rendStaff();
+    if (d.staff && d.staff.length) {
+      staff = d.staff;
+      localStorage.setItem('cachedStaff', JSON.stringify(staff));
+    }
+  } catch(e) {
+    const c = localStorage.getItem('cachedStaff');
+    if (c) staff = JSON.parse(c);
+  }
+  renderStaff();
 }
 
-// ── LOGIN ──
-let selId = null, pin = '';
+// ═══════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════
+let selStaffId = null, pinBuf = '';
 
-function rendStaff() {
-  const s = document.getElementById('staffSel');
-  s.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
-  staff.forEach(x => {
+function renderStaff() {
+  const sel = document.getElementById('staffSel');
+  sel.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
+  staff.forEach(s => {
     const o = document.createElement('option');
-    o.value = x['スタッフID'];
-    o.textContent = x['名前'] + ' (' + x['権限レベル'] + ')';
-    s.appendChild(o);
+    o.value = s.id; o.textContent = s.name;
+    sel.appendChild(o);
   });
 }
-function onStaffSel(v) { selId = v || null; pin = ''; updDots(); document.getElementById('loginErr').textContent = ''; }
-function pk(n) {
-  if (!selId) { document.getElementById('loginErr').textContent = 'Primero selecciona un empleado'; return; }
-  if (pin.length < 4) { pin += n; updDots(); if (pin.length === 4) setTimeout(pke, 200); }
+function onStaffSel(id) { selStaffId = id; pinBuf = ''; updateDots(); }
+function pk(d) {
+  if (!selStaffId) { document.getElementById('loginErr').textContent = 'Selecciona un empleado'; return; }
+  if (pinBuf.length >= 4) return;
+  pinBuf += d; updateDots();
+  if (pinBuf.length === 4) setTimeout(pkEnter, 150);
 }
-function pkd() { pin = pin.slice(0, -1); updDots(); }
-function pke() {
-  if (!selId) return;
-  const s = staff.find(x => x['スタッフID'] === selId);
+function pkDel()  { pinBuf = pinBuf.slice(0,-1); updateDots(); }
+function pkEnter() {
+  const s = staff.find(x => x.id === selStaffId);
   if (!s) return;
-  if (String(s['PINコード']) === pin) {
-    me = s; pin = ''; updDots();
-    document.getElementById('sb').textContent = me['名前'];
-    show('app'); rendProds(); rendDisc();
+  if (String(s.pin) === pinBuf) {
+    me = s;
+    document.getElementById('loginErr').textContent = '';
+    document.getElementById('staffBadge').textContent = s.name;
+    pinBuf = ''; updateDots();
+    showScr('app');
+    renderProds(); renderInv(); renderVentas();
+    initEntrada();
   } else {
     document.getElementById('loginErr').textContent = 'PIN incorrecto';
-    pin = ''; updDots();
+    pinBuf = ''; updateDots();
   }
 }
-function updDots() { for (let i = 0; i < 4; i++) document.getElementById('d' + i).classList.toggle('on', i < pin.length); }
-function doLogout() {
-  me = null; selId = null; pin = ''; cart = []; payM = null; dOn = false; dVal = 0;
-  updDots(); document.getElementById('staffSel').value = ''; document.getElementById('loginErr').textContent = '';
-  show('login');
+function updateDots() {
+  [0,1,2,3].forEach(i => {
+    document.getElementById('d'+i).className = 'dot' + (i < pinBuf.length ? ' on' : '');
+  });
 }
+function doLogout() { me = null; selStaffId = null; pinBuf = ''; showScr('login'); }
 
-// ── TABS ──
+// ═══════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════
 function goTab(t) {
   ['caja','inv','ventas','entrada'].forEach(x => {
-    document.getElementById('tc-' + x).classList.toggle('hidden', x !== t);
-    document.getElementById('tab-' + x).classList.toggle('on', x === t);
+    document.getElementById('tab-'+x).className   = 'tab' + (x===t?' on':'');
+    document.getElementById('tc-'+x).className    = 'pane' + (x!==t?' hide':'');
   });
-  if (t === 'ventas') rendVentas();
-  if (t === 'entrada') initEntrada();
+  if (t === 'entrada' && window.innerWidth >= 768) {
+    document.getElementById('lotListPanel').style.display = 'block';
+    loadLots();
+  }
 }
 
-// ── PRODUCTS ──
-function rendProds(f = '') {
-  const el = document.getElementById('pGrid');
-  const list = prods.filter(p => p['状態'] === '販売中' &&
-    (!f || p['商品名']?.includes(f) || p['独自QRコード']?.includes(f) || p['カテゴリー']?.includes(f)));
-  if (!list.length) { el.innerHTML = '<div style="grid-column:span 2;text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>'; return; }
+// ═══════════════════════════════════════════════════
+// CAJA
+// ═══════════════════════════════════════════════════
+function renderProds(filter) {
+  const el = document.getElementById('prodGrid');
+  const f  = (filter || '').toLowerCase();
+  const list = prods.filter(p => !f ||
+    p.name.toLowerCase().includes(f) ||
+    p.category.toLowerCase().includes(f) ||
+    p.qr.includes(f)
+  );
+  if (!list.length) { el.innerHTML = '<div class="loading">No se encontraron productos</div>'; return; }
   el.innerHTML = list.map(p => {
-    const st = Number(p['現在庫数']), wn = Number(p['警告在庫数']);
-    const cls = st === 0 ? 'out' : st <= wn ? 'warn' : '';
-    const stl = st === 0 ? '⚠ Sin stock' : st <= wn ? `⚡ Quedan ${st}` : `Stock: ${st}`;
-    return `<div class="pc ${cls}" onclick="addCart('${p['商品ID']}')">
-      <div class="pca">${p['カテゴリー'] || ''}</div>
-      <div class="pn">${p['商品名']}</div>
-      <div class="ppr">MXN ${Number(p['販売価格 (MXN)']).toLocaleString()}</div>
-      <div class="pst">${stl}</div>
+    const st  = Number(p.stock);
+    const wn  = Number(p.warnStock);
+    const cls = st === 0 ? 'pc out' : st <= wn ? 'pc warn' : 'pc';
+    return `<div class="${cls}" onclick="addToCart('${p.id}')">
+      <div class="pcat">${p.category||'—'}</div>
+      <div class="pnm">${p.name}</div>
+      <div class="ppr">MXN ${Number(p.price).toLocaleString()}</div>
+      <div class="pst">Stock: ${st}</div>
     </div>`;
   }).join('');
 }
-function filtP() { rendProds(document.getElementById('pSearch').value.trim()); }
+function filterProds(v) { renderProds(v); }
 
-// ── CART ──
-function addCart(id) {
-  const p = prods.find(x => x['商品ID'] === id); if (!p) return;
-  const ex = cart.find(x => x.id === id);
-  if (ex) ex.qty++; else cart.push({ id, name: p['商品名'], price: Number(p['販売価格 (MXN)']), qty: 1 });
-  dOn = false; dVal = 0; rendCart(); calcTot();
+function addToCart(id) {
+  const p = prods.find(x => x.id === id); if (!p) return;
+  const i = cart.findIndex(x => x.id === id);
+  if (i >= 0) cart[i].qty++;
+  else cart.push({ id: p.id, name: p.name, price: Number(p.price), qty: 1 });
+  renderCart();
 }
-function rendCart() {
-  const el = document.getElementById('cbody');
-  const cnt = cart.reduce((s, x) => s + x.qty, 0);
-  document.getElementById('cbadge').textContent = cnt ? `(${cnt})` : '';
-  if (!cart.length) { el.innerHTML = '<div class="cem">Selecciona un producto</div>'; return; }
-  el.innerHTML = cart.map(it => `
+function renderCart() {
+  const el = document.getElementById('cartBody');
+  document.getElementById('cartBadge').textContent = cart.length ? `(${cart.reduce((s,x)=>s+x.qty,0)})` : '';
+  if (!cart.length) { el.innerHTML = '<div class="cem">Selecciona un producto</div>'; calcTot(); return; }
+  el.innerHTML = cart.map((x,i) => `
     <div class="ci">
-      <div class="cin">${it.name}</div>
+      <div class="cin">${x.name}</div>
       <div class="qc">
-        <button class="qb" onclick="chgQ('${it.id}',-1)">−</button>
-        <span class="qn">${it.qty}</span>
-        <button class="qb" onclick="chgQ('${it.id}',1)">+</button>
+        <button class="qb" onclick="chgQty(${i},-1)">−</button>
+        <span class="qn">${x.qty}</span>
+        <button class="qb" onclick="chgQty(${i},1)">＋</button>
       </div>
-      <div class="cip">MXN ${(it.price * it.qty).toLocaleString()}</div>
-      <button class="db" onclick="delC('${it.id}')">✕</button>
+      <span class="qp">MXN ${(x.price*x.qty).toLocaleString()}</span>
+      <button class="crem" onclick="remCart(${i})">✕</button>
     </div>`).join('');
+  calcTot();
 }
-function chgQ(id, d) {
-  const it = cart.find(x => x.id === id); if (!it) return;
-  it.qty += d; if (it.qty <= 0) cart = cart.filter(x => x.id !== id);
-  dOn = false; dVal = 0; rendCart(); calcTot();
-}
-function delC(id) { cart = cart.filter(x => x.id !== id); dOn = false; dVal = 0; rendCart(); calcTot(); }
-function clearCart() {
-  cart = []; payM = null; dOn = false; dVal = 0;
-  document.querySelectorAll('.pb').forEach(b => b.classList.remove('on'));
-  rendCart(); calcTot(); document.getElementById('cobrarBtn').disabled = true;
-}
+function chgQty(i, d) { cart[i].qty = Math.max(1, cart[i].qty + d); renderCart(); }
+function remCart(i)    { cart.splice(i,1); renderCart(); }
+function clearCart()   { cart = []; payM = null; discVal = 0; discOn = false; renderCart(); resetPayBtns(); }
 
-// ── DISCOUNT ──
-function rendDisc() {
-  if (!me) return;
-  const can = me['割引権限'] === 'あり';
-  document.getElementById('dsh').classList.toggle('on', can);
-  const mp = Number(me['割引上限 (%)']) || 0, ma = Number(me['割引上限 (MXN)']) || 0;
-  document.getElementById('dcont').innerHTML = can ? `
-    <div class="dsbtns">
-      <button class="dsbt ${dType === 'pct' ? 'on' : ''}" onclick="setDT('pct')">% Porcentaje</button>
-      <button class="dsbt ${dType === 'amt' ? 'on' : ''}" onclick="setDT('amt')">$ Monto fijo</button>
-    </div>
-    <div class="dsr">
-      <input id="dIn" type="number" min="0" max="${dType === 'pct' ? mp : ma}" placeholder="${dType === 'pct' ? `Máx. ${mp}%` : `Máx. MXN ${ma}`}" inputmode="decimal">
-      <button class="apb" onclick="applyD()">Aplicar</button>
-    </div>
-    <div style="font-size:11px;color:var(--t2);margin-top:5px">Límite: ${dType === 'pct' ? mp + '%' : 'MXN ' + ma}</div>`
-    : '<div class="ndt">Esta cuenta no tiene permiso para dar descuentos</div>';
-}
-function togDisc() {
-  const b = document.getElementById('dsb'); b.classList.toggle('open');
-  document.getElementById('dchev').textContent = b.classList.contains('open') ? '▲' : '▼';
-  rendDisc();
-}
-function setDT(t) { dType = t; dOn = false; dVal = 0; rendDisc(); calcTot(); }
-function applyD() {
-  const v = parseFloat(document.getElementById('dIn')?.value); if (isNaN(v) || v <= 0) return;
-  const mp = Number(me['割引上限 (%)']) || 0, ma = Number(me['割引上限 (MXN)']) || 0;
-  if (dType === 'pct' && v > mp) { alert(`Límite: ${mp}%`); return; }
-  if (dType === 'amt' && v > ma) { alert(`Límite: MXN ${ma}`); return; }
-  dVal = v; dOn = true; calcTot();
-}
-function getDisc(sub) {
-  if (!dOn || dVal <= 0) return 0;
-  return dType === 'pct' ? Math.round(sub * dVal / 100) : Math.min(dVal, sub);
-}
-
-// ── TOTALS ──
 function calcTot() {
-  const sub = cart.reduce((s, x) => s + x.price * x.qty, 0);
-  const disc = getDisc(sub), tot = sub - disc;
-  document.getElementById('tSub').textContent = `MXN ${sub.toLocaleString()}`;
-  document.getElementById('tTot').textContent = `MXN ${tot.toLocaleString()}`;
-  const dr = document.getElementById('tDR');
+  const sub  = cart.reduce((s,x) => s + x.price * x.qty, 0);
+  let   disc = 0;
+  if (discOn && discVal > 0) {
+    disc = discType === 'pct' ? Math.round(sub * discVal / 100) : Math.min(discVal, sub);
+  }
+  const tot = sub - disc;
+  document.getElementById('tSub').textContent  = `MXN ${sub.toLocaleString()}`;
+  document.getElementById('tTot').textContent  = `MXN ${tot.toLocaleString()}`;
+  const dr = document.getElementById('tDiscRow');
   if (disc > 0) {
-    dr.classList.remove('hidden');
-    document.getElementById('tDL').textContent = dType === 'pct' ? `Descuento (${dVal}%)` : 'Descuento (fijo)';
-    document.getElementById('tD').textContent = `- MXN ${disc.toLocaleString()}`;
-  } else dr.classList.add('hidden');
+    dr.classList.remove('hide');
+    document.getElementById('tDiscLbl').textContent = discType === 'pct' ? `Descuento (${discVal}%)` : 'Descuento (fijo)';
+    document.getElementById('tDisc').textContent    = `- MXN ${disc.toLocaleString()}`;
+  } else dr.classList.add('hide');
   document.getElementById('cobrarBtn').disabled = !(cart.length && payM);
 }
-
-// ── PAYMENT ──
 function selPay(m) {
-  payM = m; document.querySelectorAll('.pb').forEach(b => b.classList.remove('on'));
-  const map = { efectivo: 'cash', tarjeta: 'card', transferencia: 'bank' };
+  payM = m;
+  document.querySelectorAll('.pb').forEach(b => b.classList.remove('on'));
+  const map = { efectivo:'cash', tarjeta:'card', transferencia:'bank' };
   document.querySelector(`.pb.${map[m]}`).classList.add('on');
   calcTot();
 }
+function resetPayBtns() { document.querySelectorAll('.pb').forEach(b => b.classList.remove('on')); }
+function togDisc() {
+  discOn = !discOn;
+  document.getElementById('discBody').classList.toggle('open', discOn);
+  document.getElementById('discHead').classList.toggle('on', discOn);
+  document.getElementById('discChev').textContent = discOn ? '▲' : '▼';
+  if (!discOn) { discVal = 0; calcTot(); }
+}
+function setDiscType(t) {
+  discType = t;
+  document.getElementById('dbt-pct').classList.toggle('on', t==='pct');
+  document.getElementById('dbt-fix').classList.toggle('on', t==='fix');
+  applyDisc();
+}
+function applyDisc() {
+  discVal = parseFloat(document.getElementById('discVal').value) || 0;
+  calcTot();
+}
 
-// ── COBRAR ──
 async function doCobrar() {
   if (!cart.length || !payM) return;
-  const sub = cart.reduce((s, x) => s + x.price * x.qty, 0);
-  const disc = getDisc(sub), tot = sub - disc;
-  const txn = 'TXN' + Date.now();
-  // スプレッドシートが認識できる形式 yyyy/mm/dd HH:MM
-  const now = new Date();
-  const dt = now.getFullYear() + '/'
-    + String(now.getMonth()+1).padStart(2,'0') + '/'
-    + String(now.getDate()).padStart(2,'0') + ' '
-    + String(now.getHours()).padStart(2,'0') + ':'
-    + String(now.getMinutes()).padStart(2,'0');
-  const rows = cart.map(it => ({
-    transactionId: txn, datetime: dt, staffId: me['スタッフID'], staffName: me['名前'],
-    productId: it.id, productName: it.name, quantity: it.qty, unitPrice: it.price,
-    subtotal: it.price * it.qty,
-    discountType: dOn ? (dType === 'pct' ? 'Porcentaje' : 'Monto fijo') : 'Ninguno',
-    discountValue: dOn ? dVal : 0, discountAmount: disc, total: tot, paymentMethod: payM, memo: ''
-  }));
-  const rec = { txn, datetime: dt, items: [...cart], subtotal: sub, discAmt: disc, total: tot, payment: payM, staff: me['名前'] };
-  sales.unshift(rec);
-  cart.forEach(it => { const p = prods.find(x => x['商品ID'] === it.id); if (p) p['現在庫数'] = Number(p['現在庫数']) - it.qty; });
-  localStorage.setItem('cp', JSON.stringify(prods));
-  if (isOnline) {
-    try { await fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'saveSale', sales: rows }) }); }
-    catch { offline.push(...rows); localStorage.setItem('offlineSales', JSON.stringify(offline)); }
-  } else { offline.push(...rows); localStorage.setItem('offlineSales', JSON.stringify(offline)); }
-  showSuc(tot, disc, rec); clearCart(); rendInv();
-}
-function showSuc(tot, disc, rec) {
-  document.getElementById('mAmt').textContent = `MXN ${tot.toLocaleString()}`;
-  document.getElementById('mSub').textContent = `${rec.payment} • ${rec.staff}`;
-  let h = rec.items.map(it => `<div class="rr"><span>${it.name} ×${it.qty}</span><span>MXN ${(it.price * it.qty).toLocaleString()}</span></div>`).join('');
-  if (disc > 0) h += `<div class="rr" style="color:var(--green)"><span>Descuento</span><span>-MXN ${disc.toLocaleString()}</span></div>`;
-  h += `<div class="rr tot"><span>Total</span><span>MXN ${tot.toLocaleString()}</span></div>`;
-  document.getElementById('mRec').innerHTML = h;
-  document.getElementById('sucOv').classList.add('open');
-}
-function closeSuc() { document.getElementById('sucOv').classList.remove('open'); }
+  const sub  = cart.reduce((s,x) => s + x.price * x.qty, 0);
+  let   disc = 0;
+  if (discOn && discVal > 0) disc = discType === 'pct' ? Math.round(sub * discVal / 100) : Math.min(discVal, sub);
+  const tot  = sub - disc;
+  const now  = new Date();
+  const dt   = now.getFullYear()+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+  const txnId= 'TXN'+now.getTime();
 
-// ── OFFLINE SYNC ──
-async function syncOff() {
-  if (!offline.length || !isOnline) return;
-  try {
-    await fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'syncOfflineSales', sales: offline }) });
-    offline = []; localStorage.setItem('offlineSales', '[]'); rendVentas();
-  } catch {}
-}
-setInterval(() => { if (isOnline) syncOff(); }, 60000);
+  const payload = {
+    action: 'saveSale',
+    txnId,
+    datetime: dt,
+    staffId:   me.id,
+    staffName: me.name,
+    payment:   payM,
+    discount:  disc,
+    items: cart.map(x => ({ id: x.id, name: x.name, qty: x.qty, price: x.price }))
+  };
 
-// ── SCANNER ──
-function openScan(ctx) {
-  scanCtx = ctx;
-  document.getElementById('scanMod').classList.add('open');
-  document.getElementById('scanMan').value = '';
-  document.getElementById('scanReg').innerHTML = '';
-  // コンテキストに合わせてヒントを変更
-  const hint = document.getElementById('scanHint');
-  if (hint) {
-    hint.textContent = ctx === 'caja'
-      ? 'QRコードを枠内に合わせてください • 距離10〜15cm'
-      : 'ISBNバーコードを横長の枠に合わせてください • 距離10〜20cm';
+  // Show success immediately
+  document.getElementById('modAmt').textContent = `MXN ${tot.toLocaleString()}`;
+  document.getElementById('modSub').textContent = `${payM} · ${cart.length} prod.`;
+  document.getElementById('modRec').innerHTML = cart.map(x =>
+    `<div class="recrow"><span>${x.name} ×${x.qty}</span><span>MXN ${(x.price*x.qty).toLocaleString()}</span></div>`
+  ).join('') + (disc ? `<div class="recrow"><span>Descuento</span><span>-MXN ${disc.toLocaleString()}</span></div>` : '') +
+  `<div class="recrow tot"><span>TOTAL</span><span>MXN ${tot.toLocaleString()}</span></div>`;
+  document.getElementById('sucModal').classList.add('open');
+
+  // Save
+  const saleRecord = { txnId, datetime: dt, staffName: me.name, payment: payM, total: tot, discount: disc, items: cart.map(x=>({name:x.name, qty:x.qty, price:x.price})) };
+  sales.unshift(saleRecord);
+  renderVentas();
+
+  // Update local stock
+  cart.forEach(x => {
+    const p = prods.find(pr => pr.id === x.id);
+    if (p) p.stock = Math.max(0, Number(p.stock) - x.qty);
+  });
+
+  if (online) {
+    try { await fetch(GAS, { method:'POST', body: JSON.stringify(payload) }); }
+    catch(e) { offline.push(payload); localStorage.setItem('offlineSales', JSON.stringify(offline)); }
+  } else {
+    offline.push(payload);
+    localStorage.setItem('offlineSales', JSON.stringify(offline));
   }
-  setTimeout(startQR, 400);
+  updateNet();
+}
+function closeSuc() {
+  document.getElementById('sucModal').classList.remove('open');
+  clearCart();
+  renderProds();
+  renderInv();
 }
 
-async function startQR() {
-  try {
-    if (qr) { try { await qr.stop(); } catch {} qr = null; }
-    qr = new Html5Qrcode('scanReg');
-
-    // Caja: QRコードのみ / Picker: バーコード（ISBN等）対応
-    const config = scanCtx === 'caja'
-      ? {
-          fps: 15,
-          qrbox: { width: 280, height: 280 },
-          aspectRatio: 1.0,
-          formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
-        }
-      : {
-          fps: 15,
-          qrbox: { width: 320, height: 160 },
-          aspectRatio: 1.0,
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E,
-            Html5QrcodeSupportedFormats.ITF,
-          ]
-        };
-
-    await qr.start(
-      { facingMode: 'environment' },
-      config,
-      async (code) => {
-        await closeScan();
-        setTimeout(() => { handleCode(code); }, 100);
-      },
-      () => {}
-    );
-  } catch(e) {
-    console.warn('QR start error:', e);
-    document.getElementById('scanReg').innerHTML =
-      '<div style="color:#fff;text-align:center;padding:48px 20px;font-size:14px;line-height:1.8">' +
-      'No se pudo acceder a la cámara.<br><br>' +
-      '① Ajustes → Safari → Cámara → Permitir<br>' +
-      '② Recarga la página e intenta de nuevo</div>';
-  }
-}
-
-async function closeScan() {
-  try {
-    if (qr) { await qr.stop(); qr = null; }
-  } catch(e) { qr = null; }
-  document.getElementById('scanMod').classList.remove('open');
-}
-
-function handleCode(code) {
-  try {
-    if (scanCtx === 'caja') {
-      const p = prods.find(x => String(x['独自QRコード']) === String(code));
-      if (p) addCart(p['商品ID']);
-      else alert(`Código QR: ${code}\nProducto no encontrado.`);
-    } else if (scanCtx === 'picker') {
-      const p = prods.find(x =>
-        String(x['ISBN / 製品番号']) === String(code) ||
-        String(x['独自QRコード']) === String(code)
-      );
-      if (p) {
-        if (ePs.find(x => x.id === p['商品ID'])) {
-          openPick();
-          setPMsg('⚠ Ya fue agregado', 'var(--red)');
-        } else {
-          addProd(p['商品ID']);
-        }
-      } else {
-        document.getElementById('pickIn').value = code;
-        filtPick(code);
-        setPMsg(`⚠ Código ${code} no encontrado. Busca manualmente.`, 'var(--yellow)');
-        openPick();
-      }
-    }
-  } catch(e) {
-    console.warn('handleCode error:', e);
-  }
-}
-
-function doManScan() {
-  const c = document.getElementById('scanMan').value.trim();
-  if (!c) return;
-  closeScan().then(() => { setTimeout(() => handleCode(c), 100); });
-}
-
-// ── INVENTARIO ──
-function rendInv(f = '') {
-  const el = document.getElementById('invL');
-  const list = prods.filter(p => !f || p['商品名']?.includes(f) || p['カテゴリー']?.includes(f));
-  if (!list.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:24px;font-size:13px">No se encontraron productos</div>'; return; }
+// ═══════════════════════════════════════════════════
+// INVENTARIO
+// ═══════════════════════════════════════════════════
+function renderInv(filter) {
+  const el = document.getElementById('invList');
+  const f  = (filter || '').toLowerCase();
+  const list = prods.filter(p => !f || p.name.toLowerCase().includes(f) || p.category.toLowerCase().includes(f));
+  if (!list.length) { el.innerHTML = '<div class="loading">Sin productos</div>'; return; }
   el.innerHTML = list.map(p => {
-    const st = Number(p['現在庫数']), wn = Number(p['警告在庫数']);
-    const cls = st === 0 ? 'out' : st <= wn ? 'low' : 'ok';
-    return `<div class="ii ${st === 0 ? 'out' : st <= wn ? 'low' : ''}">
+    const st  = Number(p.stock), wn = Number(p.warnStock);
+    const cls = st === 0 ? 'ii out' : st <= wn ? 'ii low' : 'ii';
+    const sc  = st === 0 ? 'iis out' : st <= wn ? 'iis low' : 'iis ok';
+    return `<div class="${cls}">
       <div class="iin">
-        <div class="iinm">${p['商品名']}</div>
-        <div class="iic">${p['カテゴリー'] || ''} • Costo: MXN ${Number(p['移動平均原価 (MXN)'] || 0).toLocaleString()}</div>
+        <div class="iinm">${p.name}</div>
+        <div class="iicat">${p.category||'—'} · Costo: MXN ${Number(p.cost||0).toLocaleString()}</div>
       </div>
       <div style="text-align:right">
-        <div class="iis ${cls}">${st}</div>
-        <div class="iip">MXN ${Number(p['販売価格 (MXN)']).toLocaleString()}</div>
+        <div class="${sc}">${st}</div>
+        <div class="iip">MXN ${Number(p.price).toLocaleString()}</div>
       </div>
     </div>`;
   }).join('');
 }
-function filtI(v) { rendInv(v); }
+function filterInv(v) { renderInv(v); }
 
-// ── VENTAS ──
-function rendVentas() {
-  const tot = sales.reduce((s, x) => s + x.total, 0);
-  const disc = sales.reduce((s, x) => s + x.discAmt, 0);
+// ═══════════════════════════════════════════════════
+// VENTAS
+// ═══════════════════════════════════════════════════
+function renderVentas() {
+  const tot  = sales.reduce((s,x) => s + x.total, 0);
+  const disc = sales.reduce((s,x) => s + x.discount, 0);
   document.getElementById('sv1').textContent = `MXN ${tot.toLocaleString()}`;
   document.getElementById('sv2').textContent = sales.length;
   document.getElementById('sv3').textContent = `MXN ${disc.toLocaleString()}`;
   document.getElementById('sv4').textContent = offline.length;
-  const el = document.getElementById('salesL');
-  if (!sales.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:24px;font-size:13px">No hay ventas registradas</div>'; return; }
-  const pm = { efectivo: 'ef', tarjeta: 'ta', transferencia: 'tr' };
+  const el = document.getElementById('saleList');
+  if (!sales.length) { el.innerHTML = '<div class="loading">Sin ventas hoy</div>'; return; }
+  const pm = { efectivo:'ef', tarjeta:'ta', transferencia:'tr' };
   el.innerHTML = sales.map(r => `
     <div class="si">
-      <div class="sit"><span class="stm">${r.datetime}</span><span class="sam">MXN ${r.total.toLocaleString()}</span></div>
-      <div class="sdt">${r.items.map(i => `${i.name} ×${i.qty}`).join(', ')}</div>
-      <span class="pbg ${pm[r.payment] || 'ef'}">${r.payment}</span>
-      <span style="font-size:12px;color:var(--t2);margin-left:6px">${r.staff}</span>
-      ${r.discAmt > 0 ? `<span style="font-size:11px;color:var(--green);margin-left:6px">Desc. -MXN ${r.discAmt}</span>` : ''}
+      <div class="sirow"><span class="sitime">${r.datetime}</span><span class="siamt">MXN ${r.total.toLocaleString()}</span></div>
+      <div class="sidt">${r.items.map(i=>`${i.name} ×${i.qty}`).join(', ')}</div>
+      <span class="sipay ${pm[r.payment]||'ef'}">${r.payment}</span>
+      <span style="font-size:11px;color:var(--t2);margin-left:6px">${r.staffName}</span>
+      ${r.discount ? `<span style="font-size:11px;color:var(--grn);margin-left:6px">-MXN ${r.discount.toLocaleString()}</span>` : ''}
     </div>`).join('');
 }
 
-// ── ENTRADA ──
-function canE() { return me && (me['権限レベル'] === 'オーナー' || me['権限レベル'] === 'シニアスタッフ'); }
-function initEntrada() {
-  document.getElementById('eAccess').classList.toggle('hidden', !canE());
-  document.getElementById('eDenied').classList.toggle('hidden', canE());
-  if (!canE()) return;
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('eFecha').value    = today;
-  document.getElementById('eFechaArr').value = today;
-  const r = localStorage.getItem('exR'); if (r) document.getElementById('eRate').value = r;
-  const n = (parseInt(localStorage.getItem('lotN') || '0') + 1).toString().padStart(3, '0');
-  document.getElementById('eLot').value = `LOT${n}`;
-  // 当日の為替レートを自動取得
-  fetchRateForDate(today);
-  ePs = []; rendEPs(); calcE();
-  // PC判定してロット一覧を表示
-  if (window.innerWidth >= 768) {
-    document.getElementById('editPanel').style.display = 'block';
-    loadLotList();
+async function syncOffline() {
+  if (!offline.length || !online) return;
+  const toSync = [...offline];
+  offline = [];
+  localStorage.setItem('offlineSales', '[]');
+  for (const p of toSync) {
+    try { await fetch(GAS, { method:'POST', body: JSON.stringify(p) }); }
+    catch(e) { offline.push(p); }
   }
+  localStorage.setItem('offlineSales', JSON.stringify(offline));
+  updateNet();
+}
+setInterval(() => { if (online) syncOffline(); }, 60000);
+
+// ═══════════════════════════════════════════════════
+// ENTRADA (LOT MANAGEMENT)
+// ═══════════════════════════════════════════════════
+function initEntrada() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('eOrderDate').value = today;
+  document.getElementById('eArrDate').value   = today;
+  const saved = localStorage.getItem('lastRate');
+  if (saved) document.getElementById('eRate').value = saved;
+  // Auto-set lot ID
+  const n = (parseInt(localStorage.getItem('lastLotNum') || '0') + 1).toString().padStart(3,'0');
+  document.getElementById('eLotId').value = 'LOT' + n;
+  eProds = [];
+  renderEProds();
+  calcE();
+  autoRate();
 }
 
-// 注文日に基づいて為替レートを自動取得
-async function fetchRateForDate(dateStr) {
-  const rateEl = document.getElementById('eRate');
+function setMode(m) {
+  eMode = m;
+  document.getElementById('mt-new').className   = 'mtab' + (m==='new'?' on':'');
+  document.getElementById('mt-edit').className  = 'mtab' + (m==='edit'?' onedit':'');
+  document.getElementById('editSec').classList.toggle('hide', m !== 'edit');
+  document.getElementById('prodSec').classList.toggle('hide', m === 'edit');
+  document.getElementById('eLotId').disabled    = m === 'edit';
+  document.getElementById('eLotId').style.opacity = m === 'edit' ? '.5' : '1';
+  document.getElementById('regBtn').textContent  = m === 'edit' ? 'ACTUALIZAR LOTE' : 'REGISTRAR ENTRADA';
+  calcE();
+}
+
+async function autoRate() {
+  const noteEl = document.getElementById('rateNote');
+  noteEl.style.color = 'var(--t2)';
+  noteEl.textContent = 'Obteniendo tipo de cambio...';
   try {
-    // exchangerate-api.com（無料・CORS対応）
-    const res  = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
-    const data = await res.json();
-    const rate = data.rates && data.rates.MXN ? Math.round(data.rates.MXN * 10000) / 10000 : null;
-    if (rate) {
-      rateEl.value = rate;
-      rateEl.style.borderColor = 'var(--green)';
-      setTimeout(() => { rateEl.style.borderColor = ''; }, 2000);
-      localStorage.setItem('exR', rate);
+    const r = await fetch(GAS + '?action=getRate');
+    const d = await r.json();
+    if (d.rate) {
+      document.getElementById('eRate').value = d.rate;
+      localStorage.setItem('lastRate', d.rate);
+      noteEl.style.color = 'var(--grn)';
+      noteEl.textContent = `✅ Tipo de cambio actualizado: ${d.rate}`;
       calcE();
     }
   } catch(e) {
-    // 取得失敗時は保存済みレートをそのまま使用
-    console.warn('Rate fetch failed:', e);
+    noteEl.textContent = 'No se pudo obtener el tipo de cambio';
   }
 }
 
-var entradaMode = 'new';
-function setEntradaMode(mode) {
-  entradaMode = mode;
-  const isEdit = mode === 'edit';
-  document.getElementById('modeNewBtn').style.cssText = isEdit
-    ? 'flex:1;padding:10px;border:2px solid var(--b);border-radius:10px;background:var(--s2);color:var(--t2);font-weight:700;font-size:13px;cursor:pointer'
-    : 'flex:1;padding:10px;border:2px solid var(--green);border-radius:10px;background:rgba(16,185,129,.1);color:var(--green);font-weight:700;font-size:13px;cursor:pointer';
-  document.getElementById('modeEditBtn').style.cssText = isEdit
-    ? 'flex:1;padding:10px;border:2px solid var(--blue);border-radius:10px;background:rgba(59,130,246,.1);color:var(--blue);font-weight:700;font-size:13px;cursor:pointer'
-    : 'flex:1;padding:10px;border:2px solid var(--b);border-radius:10px;background:var(--s2);color:var(--t2);font-weight:700;font-size:13px;cursor:pointer';
-  document.getElementById('editLotSel').style.display  = isEdit ? 'block' : 'none';
-  document.getElementById('prodSecEl').style.display   = isEdit ? 'none'  : 'block';
-  document.getElementById('regBtn').textContent        = isEdit ? 'ACTUALIZAR LOTE' : 'REGISTRAR ENTRADA';
-  // 編集モードではeLotを読み取り専用にする（editLotIdから自動セットされる）
-  const eLot = document.getElementById('eLot');
-  eLot.disabled        = isEdit;
-  eLot.style.background = isEdit ? 'var(--s2)' : '';
-  if (!isEdit) {
-    // 新規モードに戻した時はeLotをリセット
-    const n = (parseInt(localStorage.getItem('lotN') || '0') + 1).toString().padStart(3, '0');
-    eLot.value = `LOT${n}`;
-  }
-}
-
-// ロット一覧を読み込んで表示（PC右カラム）
-var allLots = [];
-async function loadLotList() {
-  try {
-    const r = await fetch(GAS + '?action=getLots');
-    const d = await r.json();
-    if (d.lots) { allLots = d.lots; rendLotList(allLots); }
-  } catch(e) { console.warn('getLots error:', e); }
-}
-
-function filtLots(q) {
-  const filtered = q ? allLots.filter(l =>
-    l.lotId.toLowerCase().includes(q.toLowerCase())
-  ) : allLots;
-  rendLotList(filtered);
-}
-
-function rendLotList(lots) {
-  const el = document.getElementById('lotListEl');
-  if (!lots || !lots.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);font-size:13px;padding:12px">No hay lotes registrados</div>'; return; }
-  // ユニークなロットIDでグループ化
-  const grouped = {};
-  lots.forEach(r => {
-    if (!grouped[r.lotId]) grouped[r.lotId] = { lotId: r.lotId, date: r.date, rate: r.rate, shipJpy: r.shippingJpy, refJpy: r.refundJpy, status: r.status, items: 0 };
-    grouped[r.lotId].items++;
-  });
-  const keys = Object.keys(grouped).sort().reverse().slice(0, 30);
-  el.innerHTML = keys.map(id => {
-    const l = grouped[id];
-    return `<div style="background:var(--s2);border:1px solid var(--b);border-radius:10px;padding:12px 14px;cursor:pointer" onclick="fillLotEdit('${id}')">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="font-weight:700;font-size:14px;color:var(--t1)">${id}</div>
-        <div style="font-size:11px;color:var(--t2)">${l.items}点</div>
-      </div>
-      <div style="font-size:12px;color:var(--t2);margin-top:3px">${l.date} · レート ${l.rate} · 送料¥${(l.shipJpy||0).toLocaleString()}</div>
-    </div>`;
-  }).join('');
-}
-
-// ロット情報をフォームに読み込む（右カラムのカードクリック）
-function fillLotEdit(lotId) {
-  setEntradaMode('edit');
-  document.getElementById('editLotId').value = lotId;
-  doLoadLot();
-}
-
-// 「読み込む」ボタン押下
-async function doLoadLot() {
+async function loadLot() {
   const id = document.getElementById('editLotId').value.trim();
   if (!id) return;
-  const infoEl = document.getElementById('editLotInfo');
-  infoEl.style.color = 'var(--t2)';
-  infoEl.textContent = '読み込み中...';
+  const msg = document.getElementById('loadLotMsg');
+  msg.style.color = 'var(--t2)';
+  msg.textContent = 'Cargando...';
   try {
-    const r = await fetch(GAS + '?action=getLotById&lotId=' + encodeURIComponent(id));
+    const r = await fetch(GAS + '?action=getLot&lotId=' + encodeURIComponent(id));
     const d = await r.json();
-    if (!d.lot) {
-      infoEl.style.color = 'var(--red)';
-      infoEl.textContent = '❌ ロットが見つかりません: ' + id;
-      return;
-    }
+    if (!d.lot) { msg.style.color='var(--red)'; msg.textContent='❌ Lote no encontrado: '+id; return; }
     const l = d.lot;
-    // eLotに書き込む（編集対象IDを確定）
-    document.getElementById('eLot').value   = id;
-    document.getElementById('eRate').value  = l.rate        || '';
-    document.getElementById('eShip').value  = l.shippingJpy || 0;
-    document.getElementById('eRef').value   = l.refundJpy   || 0;
-    infoEl.style.color = 'var(--green)';
-    infoEl.textContent = `✅ ${l.items}点のデータを読み込みました`;
+    document.getElementById('eLotId').value  = l.lotId;
+    document.getElementById('eRate').value   = l.rate || '';
+    document.getElementById('eShip').value   = l.shippingJpy || 0;
+    document.getElementById('eRef').value    = l.refundJpy   || 0;
+    msg.style.color = 'var(--grn)';
+    msg.textContent = `✅ ${l.items}点 · レート${l.rate} · 送料¥${(l.shippingJpy||0).toLocaleString()}`;
     calcE();
   } catch(e) {
-    infoEl.style.color = 'var(--red)';
-    infoEl.textContent = '❌ エラー: ' + e.message;
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ Error: ' + e.message;
   }
 }
 
-async function loadLotForEdit() {
-  // 後方互換のためdoLoadLotを呼ぶ
-  await doLoadLot();
-}
-
-function rendEPs() {
-  const el = document.getElementById('eProdsEl');
-  if (!ePs.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);font-size:13px;padding:8px">Agrega productos al lote</div>'; return; }
-  el.innerHTML = ePs.map((p, i) => `
-    <div class="epr">
-      <div class="ept"><div class="epn">${p.name}</div><button class="eprm" onclick="remEP(${i})">✕</button></div>
-      <div class="epf">
-        <div><div class="epl">Cantidad</div><input class="epi" type="number" min="1" value="${p.qty}" oninput="updEP(${i},'qty',this.value)" inputmode="numeric"></div>
-        <div><div class="epl">Precio compra (JPY)</div><input class="epi" type="number" min="0" value="${p.jpy || ''}" placeholder="ej: 1500" oninput="updEP(${i},'jpy',this.value)" inputmode="decimal"></div>
-        <div><div class="epl">Precio venta (MXN)</div><input class="epi" type="number" min="0" value="${p.mxn || ''}" placeholder="ej: 500" oninput="updEP(${i},'mxn',this.value)" inputmode="decimal"></div>
-      </div>
-      <div class="epc" id="epc${i}"></div>
-    </div>`).join('');
-  updCosts();
-}
-function updEP(i, f, v) { ePs[i][f] = parseFloat(v) || 0; updCosts(); calcE(); }
-function remEP(i) { ePs.splice(i, 1); rendEPs(); calcE(); }
-function updCosts() {
+function renderEProds() {
+  const el = document.getElementById('eProdList');
+  if (!eProds.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);font-size:13px;padding:8px">Agrega productos</div>'; return; }
   const rate = parseFloat(document.getElementById('eRate').value) || 0;
-  ePs.forEach((p, i) => {
-    const el = document.getElementById('epc' + i); if (!el) return;
-    if (p.jpy && rate) {
-      const c      = p.jpy * rate;
-      const budget = p.mxn ? (p.mxn / 2 - c) : null;
-      el.textContent = `Costo: MXN ${c.toFixed(2)}/ud.` + (budget !== null ? `  Margen envío: MXN ${budget.toFixed(2)}/ud.` : '');
-      el.style.color = budget !== null && budget < 0 ? 'var(--red)' : 'var(--green)';
-    } else el.textContent = '';
-  });
+  el.innerHTML = eProds.map((p,i) => {
+    const cost   = p.jpy * rate;
+    const budget = p.mxn > 0 ? (p.mxn / 2 - cost) : 0;
+    const bc     = budget >= 0 ? 'var(--grn)' : 'var(--red)';
+    return `<div class="eprod">
+      <div class="eprname">${p.name}<button onclick="removeEProd(${i})" style="background:none;border:none;color:var(--t2);font-size:16px">✕</button></div>
+      <div class="epfields">
+        <div><div class="epfl">CANTIDAD</div><input class="epi" type="number" min="1" value="${p.qty}" oninput="updEProd(${i},'qty',this.value)" inputmode="numeric"></div>
+        <div><div class="epfl">PRECIO COMPRA (JPY)</div><input class="epi" type="number" min="0" value="${p.jpy||''}" placeholder="ej: 1500" oninput="updEProd(${i},'jpy',this.value)" inputmode="decimal"></div>
+        <div><div class="epfl">PRECIO VENTA (MXN)</div><input class="epi" type="number" min="0" value="${p.mxn||''}" placeholder="ej: 500" oninput="updEProd(${i},'mxn',this.value)" inputmode="decimal"></div>
+      </div>
+      ${p.jpy && rate ? `<div class="epcost" style="color:${bc}">Costo: MXN ${cost.toFixed(0)} · Margen: MXN ${budget.toFixed(0)}/ud.</div>` : ''}
+    </div>`;
+  }).join('');
+  calcE();
 }
+function updEProd(i, f, v) { eProds[i][f] = parseFloat(v) || 0; renderEProds(); }
+function removeEProd(i) { eProds.splice(i,1); renderEProds(); calcE(); }
+
 function calcE() {
-  updCosts();
   const rate    = parseFloat(document.getElementById('eRate').value) || 0;
   const shipJpy = parseFloat(document.getElementById('eShip').value) || 0;
   const refJpy  = parseFloat(document.getElementById('eRef').value)  || 0;
   const shipMxn = shipJpy * rate;
   const refMxn  = refJpy  * rate;
-  const qty     = ePs.reduce((s, p) => s + (p.qty || 0), 0);
-  const cost    = ePs.reduce((s, p) => s + (p.jpy || 0) * rate * (p.qty || 0), 0);
-  const sale    = ePs.reduce((s, p) => s + (p.mxn || 0) * (p.qty || 0), 0);
-  // 送料充当可能額 = Σ(販売価格÷2 - 仕入原価) × 数量
-  const marg    = ePs.reduce((s, p) => s + (p.mxn > 0 ? (p.mxn / 2 - p.jpy * rate) * p.qty : 0), 0);
-  const res     = marg - shipMxn + refMxn;
-  document.getElementById('es1').textContent = ePs.length;
-  document.getElementById('es2').textContent = `${qty} uds.`;
-  document.getElementById('es3').textContent = `MXN ${cost.toFixed(0)}`;
-  document.getElementById('es4').textContent = `¥${shipJpy.toLocaleString()} JPY`;
-  document.getElementById('es4m').textContent= `MXN ${shipMxn.toFixed(0)}`;
-  document.getElementById('es5').textContent = `¥${refJpy.toLocaleString()} JPY`;
-  document.getElementById('es6').textContent = `MXN ${sale.toFixed(0)}`;
-  document.getElementById('es7').textContent = `MXN ${marg.toFixed(0)}`;
-  document.getElementById('es8').textContent = `MXN ${res.toFixed(0)}`;
-  document.getElementById('es8r').className  = 'esr ' + (res >= 0 ? 'pos' : 'neg');
-  const isEdit = entradaMode === 'edit';
-  const ok = document.getElementById('eLot').value.trim() && rate > 0 &&
-    (isEdit || (ePs.length > 0 && ePs.every(p => p.qty > 0 && p.jpy > 0 && p.mxn > 0)));
-  document.getElementById('regBtn').disabled = !ok;
+  const cost    = eProds.reduce((s,p) => s + (p.jpy||0) * rate * (p.qty||0), 0);
+  const marg    = eProds.reduce((s,p) => s + (p.mxn > 0 ? (p.mxn/2 - (p.jpy||0)*rate) * (p.qty||0) : 0), 0);
+  const result  = marg - shipMxn + refMxn;
+
+  document.getElementById('es1').textContent  = eProds.length + ' tipos';
+  document.getElementById('es2').textContent  = 'MXN ' + cost.toFixed(0);
+  document.getElementById('es3').textContent  = '¥' + shipJpy.toLocaleString();
+  document.getElementById('es3m').textContent = 'MXN ' + shipMxn.toFixed(0);
+  document.getElementById('es4').textContent  = '¥' + refJpy.toLocaleString();
+  document.getElementById('es5').textContent  = 'MXN ' + marg.toFixed(0);
+  document.getElementById('es6').textContent  = 'MXN ' + result.toFixed(0);
+  const r6 = document.getElementById('es6row');
+  r6.className = 'esr ' + (result >= 0 ? 'pos' : 'neg');
+
+  const lotId = document.getElementById('eLotId').value.trim();
+  const rate2 = rate > 0;
+  const prodsOk = eMode === 'edit' || (eProds.length > 0 && eProds.every(p => p.qty > 0 && p.jpy > 0 && p.mxn > 0));
+  document.getElementById('regBtn').disabled = !(lotId && rate2 && prodsOk);
 }
 
-// PICKER
-function openPick() {
-  document.getElementById('pickOv').classList.add('open');
-  document.getElementById('pickIn').value = '';
-  setPMsg('', '');
-  rendPickL('');
-}
-function closePick() { document.getElementById('pickOv').classList.remove('open'); }
-function setPMsg(t, c) { const el = document.getElementById('pickMsg'); el.textContent = t; el.style.color = c || 'var(--t2)'; }
-function filtPick(v) { rendPickL(v); }
-function rendPickL(f) {
-  const el = document.getElementById('pickL');
-  const added = ePs.map(p => p.id);
-  const q = (f || '').toLowerCase().trim();
-
-  const list = prods.filter(p => {
-    if (added.includes(p['商品ID'])) return false;
-    if (!q) return true;
-    // 複数のフィールド名パターンに対応
-    const name  = String(p['商品名'] || p['name'] || '').toLowerCase();
-    const cat   = String(p['カテゴリー'] || p['category'] || '').toLowerCase();
-    const qr    = String(p['独自QRコード'] || p['qr'] || '').toLowerCase();
-    const isbn  = String(p['ISBN / 製品番号'] || p['isbn'] || p['ISBN'] || '').toLowerCase();
-    const id    = String(p['商品ID'] || p['id'] || '').toLowerCase();
-    return name.includes(q) || cat.includes(q) || qr.includes(q) || isbn.includes(q) || id.includes(q);
-  });
-
-  if (!list.length) {
-    el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>';
-    return;
-  }
-  el.innerHTML = list.map(p => {
-    const name  = p['商品名'] || p['name'] || '';
-    const cat   = p['カテゴリー'] || p['category'] || '';
-    const stock = p['現在庫数'] || p['stock'] || 0;
-    const id    = p['商品ID'] || p['id'] || '';
-    return `<div class="pki" onclick="addProd('${id}')">
-      <div><div class="pkn">${name}</div><div class="pkc">${cat}</div></div>
-      <div class="pks">Stock: ${stock}</div>
-    </div>`;
-  }).join('');
-}
-function addProd(id) {
-  const p = prods.find(x => (x['商品ID'] || x['id']) === id);
-  if (!p) return;
-  const name  = p['商品名'] || p['name'] || '';
-  const price = Number(p['販売価格 (MXN)'] || p['販売価格'] || p['price'] || 0);
-  ePs.push({ id, name, mxn: price, qty: 1, jpy: 0 });
-  closePick(); rendEPs(); calcE();
-}
-
-// REGISTRAR
 async function doReg() {
-  const lotId   = document.getElementById('eLot').value.trim();
-  const date    = document.getElementById('eFecha').value;
-  const dateArr = document.getElementById('eFechaArr').value;
+  const lotId   = document.getElementById('eLotId').value.trim();
+  const oDate   = document.getElementById('eOrderDate').value;
+  const aDate   = document.getElementById('eArrDate').value;
   const rate    = parseFloat(document.getElementById('eRate').value);
   const shipJpy = parseFloat(document.getElementById('eShip').value) || 0;
   const refJpy  = parseFloat(document.getElementById('eRef').value)  || 0;
   const btn     = document.getElementById('regBtn');
   btn.disabled  = true;
-  btn.textContent = entradaMode === 'edit' ? 'Actualizando...' : 'Registrando...';
 
-  const payload = entradaMode === 'edit'
+  const payload = eMode === 'edit'
     ? { action: 'editLot', lot: { lotId, rate, shippingJpy: shipJpy, refundJpy: refJpy } }
     : { action: 'saveLot', lot: {
-        lotId, date, dateArr, rate,
-        shippingJpy: shipJpy, refundJpy: refJpy,
-        staffId: me['スタッフID'], staffName: me['名前'],
-        products: ePs.map(p => ({ productId: p.id, productName: p.name, qty: p.qty, unitPriceJpy: p.jpy, salePrice: p.mxn }))
+        lotId, date: oDate, arrDate: aDate, rate, shippingJpy: shipJpy, refundJpy: refJpy,
+        products: eProds.map(p => ({ id: p.id, name: p.name, qty: p.qty, jpy: p.jpy, mxn: p.mxn }))
       }};
 
   try {
-    if (isOnline) await fetch(GAS, { method: 'POST', body: JSON.stringify(payload) });
-    if (entradaMode === 'new') {
-      localStorage.setItem('exR', rate);
-      localStorage.setItem('lotN', parseInt(lotId.replace(/[^0-9]/g,'')) || 0);
-      ePs = [];
+    await fetch(GAS, { method:'POST', body: JSON.stringify(payload) });
+    btn.textContent = eMode === 'edit' ? '✅ ACTUALIZADO' : '✅ REGISTRADO';
+    btn.style.background = 'var(--grn)';
+    if (eMode === 'new') {
+      localStorage.setItem('lastRate', rate);
+      localStorage.setItem('lastLotNum', parseInt(lotId.replace(/[^0-9]/g,'')) || 0);
+      eProds = [];
       initEntrada();
     }
-    btn.textContent = entradaMode === 'edit' ? '✅ ACTUALIZADO' : '✅ REGISTRADO';
-    btn.style.background = 'var(--green)';
+    if (window.innerWidth >= 768) loadLots();
     setTimeout(() => {
-      btn.textContent = entradaMode === 'edit' ? 'ACTUALIZAR LOTE' : 'REGISTRAR ENTRADA';
+      btn.textContent = eMode === 'edit' ? 'ACTUALIZAR LOTE' : 'REGISTRAR ENTRADA';
       btn.style.background = '';
       btn.disabled = false;
-      if (window.innerWidth >= 768) loadLotList();
-    }, 2000);
+    }, 2500);
   } catch(e) {
-    btn.textContent = '❌ ERROR';
+    btn.textContent = '❌ ERROR - Reintentar';
     btn.disabled = false;
-    console.error(e);
   }
 }
-function saveOL(p) { const l = JSON.parse(localStorage.getItem('offlineLots') || '[]'); l.push(p); localStorage.setItem('offlineLots', JSON.stringify(l)); }
+
+// ── Lots List ──
+async function loadLots() {
+  const el = document.getElementById('lotList');
+  try {
+    const r = await fetch(GAS + '?action=getLots');
+    const d = await r.json();
+    if (d.lots) { allLots = d.lots; renderLots(allLots); }
+  } catch(e) { el.innerHTML = '<div class="loading">Error al cargar</div>'; }
+}
+function filterLots(q) {
+  const f = (q||'').toLowerCase();
+  renderLots(f ? allLots.filter(l => l.lotId.toLowerCase().includes(f)) : allLots);
+}
+function renderLots(lots) {
+  const el = document.getElementById('lotList');
+  if (!lots || !lots.length) { el.innerHTML = '<div class="loading">Sin lotes</div>'; return; }
+  el.innerHTML = lots.slice(0,50).map(l => `
+    <div class="lotcard" onclick="fillEdit('${l.lotId}')">
+      <div class="lctop"><span class="lcid">${l.lotId}</span><span class="lcitems">${l.items} productos</span></div>
+      <div class="lcinfo">${l.date} · レート${l.rate} · 送料¥${(l.shippingJpy||0).toLocaleString()}</div>
+    </div>`).join('');
+}
+function fillEdit(lotId) {
+  setMode('edit');
+  document.getElementById('editLotId').value = lotId;
+  loadLot();
+}
+
+// ═══════════════════════════════════════════════════
+// PICKER
+// ═══════════════════════════════════════════════════
+function openPick() {
+  document.getElementById('pickOv').classList.add('open');
+  document.getElementById('pickQ').value = '';
+  filterPicker('');
+}
+function closePick() { document.getElementById('pickOv').classList.remove('open'); }
+function filterPicker(q) {
+  const el     = document.getElementById('pickList');
+  const added  = eProds.map(p => p.id);
+  const f      = (q||'').toLowerCase();
+  const list   = prods.filter(p =>
+    !added.includes(p.id) &&
+    (!f || p.name.toLowerCase().includes(f) || p.category.toLowerCase().includes(f) || p.isbn.includes(f) || p.id.toLowerCase().includes(f))
+  );
+  if (!list.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>'; return; }
+  el.innerHTML = list.map(p => `
+    <div class="pki" onclick="addEProd('${p.id}')">
+      <div><div class="pkn">${p.name}</div><div class="pkc">${p.category||'—'}</div></div>
+      <div class="pks">Stock: ${p.stock} · MXN ${Number(p.price).toLocaleString()}</div>
+    </div>`).join('');
+}
+function addEProd(id) {
+  if (eProds.find(p => p.id === id)) { alert('Ya agregado'); return; }
+  const p = prods.find(x => x.id === id); if (!p) return;
+  eProds.push({ id: p.id, name: p.name, qty: 1, jpy: 0, mxn: Number(p.price) || 0 });
+  closePick();
+  renderEProds();
+}
+
+// ═══════════════════════════════════════════════════
+// SCANNER
+// ═══════════════════════════════════════════════════
+function openScan(ctx) {
+  scanCtx = ctx;
+  const mod  = document.getElementById('scanMod');
+  const hint = document.getElementById('scanHint');
+  mod.classList.add('open');
+  document.getElementById('scanInput').value = '';
+  hint.textContent = ctx === 'caja'
+    ? 'Apunta el QR al centro • Distancia: 10-15cm'
+    : 'Apunta el código de barras (ISBN) • Distancia: 10-20cm';
+  setTimeout(startScanner, 400);
+}
+async function startScanner() {
+  try {
+    if (qrScanner) { try { await qrScanner.stop(); } catch(e){} qrScanner = null; }
+    qrScanner = new Html5Qrcode('scanReg');
+    const cfg = scanCtx === 'caja'
+      ? { fps:15, qrbox:{width:260,height:260}, formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE] }
+      : { fps:15, qrbox:{width:320,height:160}, formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.UPC_A] };
+    await qrScanner.start({ facingMode:'environment' }, cfg, async (code) => {
+      await closeScan();
+      setTimeout(() => handleCode(code), 100);
+    }, () => {});
+  } catch(e) {
+    document.getElementById('scanReg').innerHTML = '<div style="color:#fff;text-align:center;padding:48px 20px;font-size:14px">No se pudo acceder a la cámara.<br><br>① Ajustes → Safari → Cámara → Permitir<br>② Recarga la página</div>';
+  }
+}
+async function closeScan() {
+  try { if (qrScanner) { await qrScanner.stop(); qrScanner = null; } } catch(e) { qrScanner = null; }
+  document.getElementById('scanMod').classList.remove('open');
+}
+function doManScan() {
+  const c = document.getElementById('scanInput').value.trim();
+  if (!c) return;
+  closeScan().then(() => setTimeout(() => handleCode(c), 100));
+}
+function handleCode(code) {
+  if (scanCtx === 'caja') {
+    const p = prods.find(x => x.qr === code || x.id === code);
+    if (p) addToCart(p.id);
+    else alert('Producto no encontrado: ' + code);
+  } else if (scanCtx === 'picker') {
+    const p = prods.find(x => x.isbn === code || x.qr === code || x.id === code);
+    if (p) addEProd(p.id);
+    else {
+      document.getElementById('pickQ').value = code;
+      filterPicker(code);
+      openPick();
+    }
+  }
+}
 </script>
 </body>
 </html>
