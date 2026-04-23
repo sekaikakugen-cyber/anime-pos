@@ -415,7 +415,7 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
               </div>
               <div>
                 <div class="el">FECHA DE PEDIDO</div>
-                <input id="eOrderDate" class="epi" type="date" onchange="calcE();autoRate()">
+                <input id="eOrderDate" class="epi" type="date" onchange="calcE()">
               </div>
             </div>
             <div class="erow">
@@ -425,8 +425,11 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
               </div>
               <div>
                 <div class="el">TIPO DE CAMBIO (JPY→MXN)</div>
-                <input id="eRate" class="epi" type="text" inputmode="decimal" placeholder="0.130" oninput="calcE()">
-                <div class="enote" id="rateNote">Cargando tipo de cambio...</div>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input id="eRate" class="epi" type="text" inputmode="decimal" placeholder="Ej: 0.109" oninput="calcE()" style="flex:1">
+                  <button onclick="autoRate()" style="background:var(--c2);border:1px solid var(--bd);border-radius:8px;padding:9px 10px;font-size:11px;color:var(--t2);white-space:nowrap;flex-shrink:0">今日のレート</button>
+                </div>
+                <div class="enote" id="rateNote">仕入れ日のレートを手動で入力してください</div>
               </div>
             </div>
             <div class="erow">
@@ -977,15 +980,22 @@ function initEntrada() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('eOrderDate').value = today;
   document.getElementById('eArrDate').value   = today;
+  // 前回使用したレートを表示（参考として）
   const saved = localStorage.getItem('lastRate');
-  if (saved) document.getElementById('eRate').value = saved;
-  // Auto-set lot ID
+  if (saved) {
+    document.getElementById('eRate').value = saved;
+    document.getElementById('rateNote').textContent = `前回使用レート: ${saved}（仕入れ日のレートに変更してください）`;
+    document.getElementById('rateNote').style.color = 'var(--yel)';
+  } else {
+    document.getElementById('eRate').value = '';
+    document.getElementById('rateNote').textContent = '仕入れ日のレートを手動で入力してください';
+    document.getElementById('rateNote').style.color = 'var(--t2)';
+  }
   const n = (parseInt(localStorage.getItem('lastLotNum') || '0') + 1).toString().padStart(3,'0');
   document.getElementById('eLotId').value = 'LOT' + n;
   eProds = [];
   renderEProds();
   calcE();
-  autoRate();
 }
 
 function setMode(m) {
@@ -1035,19 +1045,20 @@ function setMode(m) {
 async function autoRate() {
   const noteEl = document.getElementById('rateNote');
   noteEl.style.color = 'var(--t2)';
-  noteEl.textContent = 'Obteniendo tipo de cambio...';
+  noteEl.textContent = '取得中...';
   try {
     const r = await fetch(GAS + '?action=getRate');
     const d = await r.json();
     if (d.rate) {
       document.getElementById('eRate').value = d.rate;
       localStorage.setItem('lastRate', d.rate);
-      noteEl.style.color = 'var(--grn)';
-      noteEl.textContent = `✅ Tipo de cambio actualizado: ${d.rate}`;
+      noteEl.style.color = 'var(--yel)';
+      noteEl.textContent = `今日のレート: ${d.rate}（仕入れ日のレートに変更してください）`;
       calcE();
     }
   } catch(e) {
-    noteEl.textContent = 'No se pudo obtener el tipo de cambio';
+    noteEl.style.color = 'var(--red)';
+    noteEl.textContent = '取得失敗。手動で入力してください。';
   }
 }
 
@@ -1164,8 +1175,15 @@ async function doReg() {
 
   let payload;
   if (eMode === 'edit') {
-    // 編集：送料・為替レートのみ更新
-    payload = { action: 'editLot', lot: { lotId, rate, shippingJpy: shipJpy, refundJpy: refJpy } };
+    // 編集：日付・送料・為替レートを更新
+    payload = { action: 'editLot', lot: {
+      lotId,
+      arrDate: aDate,
+      date:    oDate,
+      rate,
+      shippingJpy: shipJpy,
+      refundJpy:   refJpy
+    }};
   } else if (eMode === 'add') {
     // 追加：既存ロットに商品を追加（送料は既存のまま）
     payload = { action: 'saveLot', lot: {
