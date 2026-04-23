@@ -1185,10 +1185,11 @@ async function doReg() {
       refundJpy:   refJpy
     }};
   } else if (eMode === 'add') {
-    // 追加：既存ロットに商品を追加（送料は既存のまま）
+    // 追加：既存ロットに商品を追加（送料は記録しない）
     payload = { action: 'saveLot', lot: {
       lotId, date: oDate, arrDate: aDate, rate,
-      shippingJpy: shipJpy, refundJpy: refJpy,
+      shippingJpy: 0, refundJpy: 0,
+      isAddMode: true,  // 追加モードフラグ：送料を記録しない
       products: eProds.map(p => ({ id: p.id, name: p.name, qty: p.qty, jpy: p.jpy, mxn: p.mxn }))
     }};
   } else {
