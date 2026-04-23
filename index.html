@@ -310,6 +310,14 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
           <input id="pSearch" placeholder="Buscar producto..." oninput="filterProds(this.value)">
           <button class="scnbtn" onclick="openScan('caja')">📷</button>
         </div>
+        <!-- 顧客エリア -->
+        <div id="custArea" style="background:var(--c1);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div id="custInfo" style="font-size:13px;color:var(--t2)">👤 Sin cliente</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="openScan('customer')" style="background:var(--c2);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--t2)">📷 Escanear tarjeta</button>
+            <button onclick="clearCustomer()" id="custClearBtn" style="display:none;background:none;border:none;color:var(--t2);font-size:16px">✕</button>
+          </div>
+        </div>
         <div class="pgrid" id="prodGrid"><div class="loading">Cargando...</div></div>
       </div>
       <div class="cart">
@@ -540,6 +548,7 @@ let qrScanner = null;
 let eProds = [];
 let eMode  = 'new';
 let allLots= [];
+let customer = null; // 現在選択中の顧客
 
 // ═══════════════════════════════════════════════════
 // BOOT
@@ -729,6 +738,68 @@ function chgQty(i, d) { cart[i].qty = Math.max(1, cart[i].qty + d); renderCart()
 function remCart(i)    { cart.splice(i,1); renderCart(); }
 function clearCart()   { cart = []; payM = null; discVal = 0; discOn = false; renderCart(); resetPayBtns(); }
 
+// ── 顧客機能 ──────────────────────────────────────────
+async function loadCustomer(customerId) {
+  try {
+    const r = await fetch(GAS + '?action=getCustomer&customerId=' + encodeURIComponent(customerId));
+    const d = await r.json();
+    if (d.customer) {
+      customer = d.customer;
+      renderCustomer();
+      // 会員割引を自動適用
+      if (customer.discount > 0) {
+        discOn   = true;
+        discType = 'pct';
+        discVal  = customer.discount;
+        document.getElementById('discBody').classList.add('open');
+        document.getElementById('discHead').classList.add('on');
+        document.getElementById('discChev').textContent = '▲';
+        document.getElementById('discVal').value = customer.discount;
+        calcTot();
+      }
+    } else {
+      alert('顧客が見つかりません: ' + customerId);
+    }
+  } catch(e) {
+    alert('エラー: ' + e.message);
+  }
+}
+
+function renderCustomer() {
+  const el      = document.getElementById('custInfo');
+  const clearBtn= document.getElementById('custClearBtn');
+  const area    = document.getElementById('custArea');
+  if (customer) {
+    const rankColors = {
+      '👑 Platino': '#FFD700',
+      '⭐⭐⭐ Oro':  '#F57F17',
+      '⭐⭐ Plata':  '#1565C0',
+      '⭐ Bronce':   '#4E342E',
+    };
+    const color = rankColors[customer.rank] || 'var(--t2)';
+    el.innerHTML = `<span style="font-weight:700;color:var(--t1)">${customer.name}</span> <span style="font-size:11px;color:${color};font-weight:700">${customer.rank}</span> <span style="font-size:11px;color:var(--grn)">−${customer.discount}% desc.</span>`;
+    clearBtn.style.display = 'block';
+    area.style.borderColor = 'var(--grn)';
+  } else {
+    el.innerHTML = '👤 Sin cliente';
+    clearBtn.style.display = 'none';
+    area.style.borderColor = 'var(--bd)';
+  }
+}
+
+function clearCustomer() {
+  customer = null;
+  renderCustomer();
+  // 割引もリセット
+  discOn   = false;
+  discVal  = 0;
+  document.getElementById('discBody').classList.remove('open');
+  document.getElementById('discHead').classList.remove('on');
+  document.getElementById('discChev').textContent = '▼';
+  document.getElementById('discVal').value = '';
+  calcTot();
+}
+
 function calcTot() {
   const sub  = cart.reduce((s,x) => s + x.price * x.qty, 0);
   let   disc = 0;
@@ -786,8 +857,10 @@ async function doCobrar() {
     action: 'saveSale',
     txnId,
     datetime: dt,
-    staffId:   me.id,
-    staffName: me.name,
+    staffId:      me.id,
+    staffName:    me.name,
+    customerId:   customer ? customer.id   : '',
+    customerName: customer ? customer.name : '',
     payment:   payM,
     discount:  disc,
     items: cart.map(x => ({ id: x.id, name: x.name, qty: x.qty, price: x.price }))
@@ -825,6 +898,7 @@ async function doCobrar() {
 function closeSuc() {
   document.getElementById('sucModal').classList.remove('open');
   clearCart();
+  clearCustomer();
   renderProds();
   renderInv();
 }
@@ -1235,6 +1309,8 @@ function handleCode(code) {
     const p = prods.find(x => x.qr === code || x.id === code);
     if (p) addToCart(p.id);
     else alert('Producto no encontrado: ' + code);
+  } else if (scanCtx === 'customer') {
+    loadCustomer(code);
   } else if (scanCtx === 'picker') {
     const p = prods.find(x => x.isbn === code || x.qr === code || x.id === code);
     if (p) addEProd(p.id);
