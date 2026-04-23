@@ -307,7 +307,7 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
     <div class="p14">
       <div>
         <div class="srow">
-          <input id="pSearch" placeholder="Buscar producto..." oninput="filterProds(this.value)">
+          <input id="pSearch" placeholder="🔍 Buscar producto por nombre o categoría..." oninput="filterProds(this.value)" style="border-radius:10px">
           <button class="scnbtn" onclick="openScan('caja')">📷</button>
         </div>
         <!-- 顧客エリア -->
@@ -689,11 +689,15 @@ function goTab(t) {
 // ═══════════════════════════════════════════════════
 function renderProds(filter) {
   const el = document.getElementById('prodGrid');
-  const f  = (filter || '').toLowerCase();
-  const list = prods.filter(p => !f ||
-    p.name.toLowerCase().includes(f) ||
-    p.category.toLowerCase().includes(f) ||
-    p.qr.includes(f)
+  const f  = (filter || '').trim();
+  // 検索ワードがない時は非表示
+  if (!f) { el.innerHTML = ''; el.style.display = 'none'; return; }
+  el.style.display = 'grid';
+  const fl = f.toLowerCase();
+  const list = prods.filter(p =>
+    p.name.toLowerCase().includes(fl) ||
+    p.category.toLowerCase().includes(fl) ||
+    p.qr.includes(fl)
   );
   if (!list.length) { el.innerHTML = '<div class="loading">No se encontraron productos</div>'; return; }
   el.innerHTML = list.map(p => {
