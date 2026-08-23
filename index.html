@@ -1086,11 +1086,12 @@ async function loadLot() {
     document.getElementById('eRate').value   = l.rate || '';
     document.getElementById('eShip').value   = l.shippingJpy || 0;
     document.getElementById('eRef').value    = l.refundJpy   || 0;
-    // 日付をdate inputに正しくセット（yyyy-MM-dd形式が必要）
+    // 仕入れ日（注文日）と到着日を別々にセット
     if (l.date) {
-      const d2 = l.date.replace(/\//g, '-').slice(0, 10);
-      document.getElementById('eOrderDate').value = d2;
-      document.getElementById('eArrDate').value   = d2;
+      document.getElementById('eOrderDate').value = l.date.replace(/\//g, '-').slice(0, 10);
+    }
+    if (l.arrDate) {
+      document.getElementById('eArrDate').value = l.arrDate.replace(/\//g, '-').slice(0, 10);
     }
     msg.style.color = 'var(--grn)';
     msg.textContent = `✅ ${l.items}点 · レート${l.rate} · 送料¥${(l.shippingJpy||0).toLocaleString()}`;
