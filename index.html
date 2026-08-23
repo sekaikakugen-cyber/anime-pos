@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JapocanoPOS">
+<meta name="theme-color" content="#1a1a2e">
+<link rel="manifest" href="/anime-pos/manifest.json">
 <title>JapocanoPOS</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
@@ -850,8 +853,13 @@ function applyDisc() {
   calcTot();
 }
 
+let _paying = false; // 二重送信防止フラグ
+
 async function doCobrar() {
   if (!cart.length || !payM) return;
+  if (_paying) return; // 二重送信防止
+  _paying = true;
+
   const sub  = cart.reduce((s,x) => s + x.price * x.qty, 0);
   let   disc = 0;
   if (discOn && discVal > 0) disc = discType === 'pct' ? Math.round(sub * discVal / 100) : Math.min(discVal, sub);
@@ -901,6 +909,7 @@ async function doCobrar() {
     localStorage.setItem('offlineSales', JSON.stringify(offline));
   }
   updateNet();
+  _paying = false; // フラグをリセット
 }
 function closeSuc() {
   document.getElementById('sucModal').classList.remove('open');
@@ -1349,6 +1358,15 @@ function handleCode(code) {
       openPick();
     }
   }
+}
+
+// Service Worker登録（オフライン対応）
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/anime-pos/sw.js')
+      .then(reg => console.log('SW登録完了:', reg.scope))
+      .catch(err => console.log('SW登録失敗:', err));
+  });
 }
 </script>
 </body>
