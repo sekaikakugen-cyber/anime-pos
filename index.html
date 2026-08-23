@@ -896,7 +896,7 @@ async function loadBoxInfo() {
     return;
   }
 
-  if (prod.canOpen !== 'はい') {
+  if (prod.canOpen !== 'Si') {
     msg.style.color = 'var(--red)';
     msg.textContent = '❌ この商品は開封対象ではありません（L列を確認してください）';
     return;
