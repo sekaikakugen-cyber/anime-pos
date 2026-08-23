@@ -390,6 +390,29 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
           <button class="mtab on" id="mt-new" onclick="setMode('new')">🆕 Nuevo lote</button>
           <button class="mtab" id="mt-add" onclick="setMode('add')">➕ Agregar productos</button>
           <button class="mtab" id="mt-edit" onclick="setMode('edit')">✏️ Editar lote</button>
+          <button class="mtab" id="mt-open" onclick="setMode('open')">📦 Abrir caja</button>
+        </div>
+
+        <!-- Abrir caja（開封）-->
+        <div class="esec hide" id="openBoxSec">
+          <div class="esh">📦 Abrir caja</div>
+          <div class="esb">
+            <div class="el">ID DE PRODUCTO (CAJA)</div>
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <input id="openBoxId" class="epi" placeholder="Escanea o ingresa ID de caja">
+              <button onclick="loadBoxInfo()" style="background:var(--blu);border:none;color:#fff;border-radius:9px;padding:11px 16px;font-weight:700;font-size:13px;white-space:nowrap">読み込む</button>
+            </div>
+            <div id="openBoxMsg" style="font-size:12px;min-height:16px;margin-top:4px"></div>
+            <div id="openBoxInfo" style="display:none;margin-top:8px;background:#1a1a2e;border-radius:8px;padding:12px">
+              <div id="openBoxName" style="font-weight:700;font-size:14px;color:#fff;margin-bottom:4px"></div>
+              <div id="openBoxDetail" style="font-size:12px;color:var(--t2)"></div>
+              <div style="margin-top:10px">
+                <div class="el">CANTIDAD DE CAJAS A ABRIR</div>
+                <input id="openBoxQty" class="epi" type="number" min="1" value="1" style="width:80px">
+              </div>
+              <button onclick="doOpenBox()" style="margin-top:10px;width:100%;background:var(--grn);border:none;color:#fff;border-radius:9px;padding:12px;font-weight:700;font-size:14px">📦 Abrir caja</button>
+            </div>
+          </div>
         </div>
 
         <!-- Add/Edit: Lot selector -->
@@ -855,6 +878,77 @@ function applyDisc() {
 
 let _paying = false; // 二重送信防止フラグ
 
+// ── 開封機能 ──────────────────────────────────────────
+async function loadBoxInfo() {
+  const id  = document.getElementById('openBoxId').value.trim();
+  const msg = document.getElementById('openBoxMsg');
+  const info= document.getElementById('openBoxInfo');
+  if (!id) return;
+
+  msg.textContent = 'Cargando...';
+  msg.style.color = 'var(--t2)';
+  info.style.display = 'none';
+
+  const prod = prods.find(p => p.id === id || p.qr === id);
+  if (!prod) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ 商品が見つかりません: ' + id;
+    return;
+  }
+
+  if (prod.canOpen !== 'はい') {
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ この商品は開封対象ではありません（L列を確認してください）';
+    return;
+  }
+
+  const looseProd = prods.find(p => p.id === prod.looseId);
+  const looseName = looseProd ? looseProd.name : prod.looseId;
+
+  msg.style.color = 'var(--grn)';
+  msg.textContent = '✅ 商品を確認しました';
+  document.getElementById('openBoxName').textContent = prod.name;
+  document.getElementById('openBoxDetail').textContent =
+    `在庫: ${prod.stock}箱 → 開封するとバラ商品「${looseName}」が${prod.looseCount}個増えます`;
+  info.style.display = 'block';
+  document.getElementById('openBoxQty').value = 1;
+}
+
+async function doOpenBox() {
+  const id  = document.getElementById('openBoxId').value.trim();
+  const qty = parseInt(document.getElementById('openBoxQty').value) || 1;
+  const msg = document.getElementById('openBoxMsg');
+  if (!id) return;
+
+  try {
+    const res = await fetch(GAS, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'openBox', boxId: id, qty })
+    });
+    const d = await res.json();
+    if (d.error) {
+      msg.style.color = 'var(--red)';
+      msg.textContent = '❌ ' + d.error;
+      return;
+    }
+
+    // ローカルの在庫を更新
+    const boxProd = prods.find(p => p.id === d.boxId);
+    if (boxProd) boxProd.stock = d.newBoxStock;
+    const looseProd = prods.find(p => p.id === d.looseId);
+    if (looseProd) looseProd.stock = d.newLooseStock;
+
+    msg.style.color = 'var(--grn)';
+    msg.textContent = `✅ 開封完了！バラ商品が${d.addedQty}個追加されました`;
+    document.getElementById('openBoxInfo').style.display = 'none';
+    document.getElementById('openBoxId').value = '';
+
+  } catch(e) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ エラー: ' + e.message;
+  }
+}
+
 async function doCobrar() {
   if (!cart.length || !payM) return;
   if (_paying) return; // 二重送信防止
@@ -1013,6 +1107,20 @@ function setMode(m) {
   document.getElementById('mt-new').className  = 'mtab' + (m==='new'  ? ' on'     : '');
   document.getElementById('mt-add').className  = 'mtab' + (m==='add'  ? ' onedit' : '');
   document.getElementById('mt-edit').className = 'mtab' + (m==='edit' ? ' onedit' : '');
+  document.getElementById('mt-open').className = 'mtab' + (m==='open' ? ' onedit' : '');
+
+  // 開封モードの表示切替
+  const openBoxSec = document.getElementById('openBoxSec');
+  if (openBoxSec) openBoxSec.classList.toggle('hide', m !== 'open');
+
+  // 開封モード以外の通常セクション
+  const normalSecs = ['editSec','prodSec','lotInfoSec'];
+  normalSecs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hide', m === 'open');
+  });
+
+  if (m === 'open') return; // 開封モードはここで終了
 
   // ロット選択エリア：追加・編集モードで表示
   document.getElementById('editSec').classList.toggle('hide', m === 'new');
