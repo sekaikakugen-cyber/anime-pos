@@ -989,10 +989,13 @@ async function doCobrar() {
   sales.unshift(saleRecord);
   renderVentas();
 
-  // Update local stock
+  // Update local stock（在庫減算数を考慮）
   cart.forEach(x => {
     const p = prods.find(pr => pr.id === x.id);
-    if (p) p.stock = Math.max(0, Number(p.stock) - x.qty);
+    if (p) {
+      const decrement = p.stockDecrement || 1;
+      p.stock = Math.max(0, Number(p.stock) - (x.qty * decrement));
+    }
   });
 
   if (online) {
