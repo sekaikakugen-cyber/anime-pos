@@ -989,12 +989,19 @@ async function doCobrar() {
   sales.unshift(saleRecord);
   renderVentas();
 
-  // Update local stock（在庫減算数を考慮）
+  // Update local stock（L列・N列を考慮）
   cart.forEach(x => {
     const p = prods.find(pr => pr.id === x.id);
     if (p) {
       const decrement = p.stockDecrement || 1;
-      p.stock = Math.max(0, Number(p.stock) - (x.qty * decrement));
+      if (p.looseId) {
+        // バラ変換先商品の在庫を減らす
+        const looseProd = prods.find(pr => pr.id === p.looseId);
+        if (looseProd) looseProd.stock = Math.max(0, Number(looseProd.stock) - (x.qty * decrement));
+      } else {
+        // 販売した商品自体の在庫を減らす
+        p.stock = Math.max(0, Number(p.stock) - (x.qty * decrement));
+      }
     }
   });
 
