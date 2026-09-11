@@ -730,14 +730,22 @@ function renderProds(filter) {
   );
   if (!list.length) { el.innerHTML = '<div class="loading">No se encontraron productos</div>'; return; }
   el.innerHTML = list.map(p => {
-    const st  = Number(p.stock);
+    // L列（バラ変換先）が設定されている場合はバラ商品の在庫を参照
+    const looseProd = p.looseId ? prods.find(pr => pr.id === p.looseId) : null;
+    const decrement = p.stockDecrement || 1;
+    const effectiveStock = looseProd
+      ? Math.floor(Number(looseProd.stock) / decrement) // バラ在庫÷減算数＝販売可能数
+      : Number(p.stock);
     const wn  = Number(p.warnStock);
-    const cls = st === 0 ? 'pc out' : st <= wn ? 'pc warn' : 'pc';
+    const cls = effectiveStock === 0 ? 'pc out' : effectiveStock <= wn ? 'pc warn' : 'pc';
+    const stockLabel = looseProd
+      ? `Stock: ${effectiveStock} (${looseProd.stock}枚)`
+      : `Stock: ${effectiveStock}`;
     return `<div class="${cls}" onclick="addToCart('${p.id}')">
       <div class="pcat">${p.category||'—'}</div>
       <div class="pnm">${p.name}</div>
       <div class="ppr">MXN ${Number(p.price).toLocaleString()}</div>
-      <div class="pst">Stock: ${st}</div>
+      <div class="pst">${stockLabel}</div>
     </div>`;
   }).join('');
 }
@@ -745,6 +753,21 @@ function filterProds(v) { renderProds(v); }
 
 function addToCart(id) {
   const p = prods.find(x => x.id === id); if (!p) return;
+
+  // 在庫チェック（バラ変換先がある場合はバラ商品の在庫を参照）
+  const looseProd = p.looseId ? prods.find(pr => pr.id === p.looseId) : null;
+  const decrement = p.stockDecrement || 1;
+  const effectiveStock = looseProd
+    ? Math.floor(Number(looseProd.stock) / decrement)
+    : Number(p.stock);
+
+  // カート内の既存数量を確認
+  const currentQty = cart.find(x => x.id === id)?.qty || 0;
+  if (effectiveStock <= currentQty) {
+    alert(`在庫が不足しています（残り${effectiveStock}）`);
+    return;
+  }
+
   const i = cart.findIndex(x => x.id === id);
   if (i >= 0) cart[i].qty++;
   else cart.push({ id: p.id, name: p.name, price: Number(p.price), qty: 1 });
