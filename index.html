@@ -397,10 +397,13 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
         <div class="esec hide" id="openBoxSec">
           <div class="esh">📦 Abrir caja</div>
           <div class="esb">
-            <div class="el">ID DE PRODUCTO (CAJA)</div>
-            <div style="display:flex;gap:8px;align-items:flex-end">
-              <input id="openBoxId" class="epi" placeholder="Escanea o ingresa ID de caja">
-              <button onclick="loadBoxInfo()" style="background:var(--blu);border:none;color:#fff;border-radius:9px;padding:11px 16px;font-weight:700;font-size:13px;white-space:nowrap">読み込む</button>
+            <div class="el">PRODUCTO (CAJA)</div>
+            <button onclick="openScan('openbox')" style="width:100%;background:var(--blu);border:none;color:#fff;border-radius:9px;padding:12px;font-weight:700;font-size:14px;margin-bottom:8px">
+              📷 Escanear QR / Código
+            </button>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+              <input id="openBoxId" class="epi" placeholder="O ingresa ID manualmente" style="flex:1">
+              <button onclick="doManOpenBox()" style="background:var(--t2);border:none;color:#fff;border-radius:9px;padding:11px 14px;font-weight:700;font-size:13px;white-space:nowrap">Buscar</button>
             </div>
             <div id="openBoxMsg" style="font-size:12px;min-height:16px;margin-top:4px"></div>
             <div id="openBoxInfo" style="display:none;margin-top:8px;background:#1a1a2e;border-radius:8px;padding:12px">
@@ -902,26 +905,33 @@ function applyDisc() {
 let _paying = false; // 二重送信防止フラグ
 
 // ── 開封機能 ──────────────────────────────────────────
-async function loadBoxInfo() {
-  const id  = document.getElementById('openBoxId').value.trim();
+function doManOpenBox() {
+  const code = document.getElementById('openBoxId').value.trim();
+  if (!code) return;
+  loadBoxInfo(code);
+}
+
+async function loadBoxInfo(code) {
+  if (!code) code = document.getElementById('openBoxId').value.trim();
   const msg = document.getElementById('openBoxMsg');
   const info= document.getElementById('openBoxInfo');
-  if (!id) return;
+  if (!code) return;
 
   msg.textContent = 'Cargando...';
   msg.style.color = 'var(--t2)';
   info.style.display = 'none';
 
-  const prod = prods.find(p => p.id === id || p.qr === id);
+  // QR・ID・商品名で検索
+  const prod = prods.find(p => p.qr === code || p.id === code);
   if (!prod) {
     msg.style.color = 'var(--red)';
-    msg.textContent = '❌ 商品が見つかりません: ' + id;
+    msg.textContent = '❌ Producto no encontrado: ' + code;
     return;
   }
 
   if (prod.canOpen !== 'Si') {
     msg.style.color = 'var(--red)';
-    msg.textContent = '❌ この商品は開封対象ではありません（L列を確認してください）';
+    msg.textContent = '❌ Este producto no está configurado para abrir (columna K = Si)';
     return;
   }
 
@@ -929,10 +939,11 @@ async function loadBoxInfo() {
   const looseName = looseProd ? looseProd.name : prod.looseId;
 
   msg.style.color = 'var(--grn)';
-  msg.textContent = '✅ 商品を確認しました';
+  msg.textContent = '✅ Producto encontrado';
+  document.getElementById('openBoxId').value = prod.id;
   document.getElementById('openBoxName').textContent = prod.name;
   document.getElementById('openBoxDetail').textContent =
-    `在庫: ${prod.stock}箱 → 開封するとバラ商品「${looseName}」が${prod.looseCount}個増えます`;
+    `Stock: ${prod.stock} cajas → Al abrir se agregan ${prod.looseCount} unidades a "${looseName}"`;
   info.style.display = 'block';
   document.getElementById('openBoxQty').value = 1;
 }
@@ -1489,6 +1500,10 @@ function handleCode(code) {
     const p = prods.find(x => x.qr === code || x.id === code);
     if (p) addToCart(p.id);
     else alert('Producto no encontrado: ' + code);
+  } else if (scanCtx === 'openbox') {
+    // 開封用スキャン
+    document.getElementById('openBoxId').value = code;
+    loadBoxInfo(code);
   } else if (scanCtx === 'customer') {
     loadCustomer(code);
   } else if (scanCtx === 'picker') {
