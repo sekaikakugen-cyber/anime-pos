@@ -992,10 +992,11 @@ function loadBoxInfo(code) {
 }
 
 async function doOpenBox() {
-  const info = document.getElementById('openBoxInfo');
-  const id   = info.dataset.boxId;
-  const qty  = parseInt(document.getElementById('openBoxQty').value) || 1;
-  const msg  = document.getElementById('openBoxMsg');
+  const info  = document.getElementById('openBoxInfo');
+  const id    = info ? info.dataset.boxId : null;
+  const qtyEl = document.getElementById('openBoxQty');
+  const qty   = qtyEl ? (parseInt(qtyEl.value) || 1) : 1;
+  const msg   = document.getElementById('openBoxMsg');
   if (!id) return;
 
   try {
@@ -1018,8 +1019,9 @@ async function doOpenBox() {
 
     msg.style.color = 'var(--grn)';
     msg.textContent = `✅ 開封完了！バラ商品が${d.addedQty}個追加されました`;
-    document.getElementById('openBoxInfo').style.display = 'none';
-    document.getElementById('openBoxId').value = '';
+    const infoEl = document.getElementById('openBoxInfo');
+    if (infoEl) infoEl.style.display = 'none';
+    renderInv();
 
   } catch(e) {
     msg.style.color = 'var(--red)';
@@ -1202,8 +1204,7 @@ function setMode(m) {
   if (openBoxSec) openBoxSec.classList.toggle('hide', m !== 'open');
 
   // 開封モード以外の通常セクション
-  const normalSecs = ['editSec','prodSec','lotInfoSec'];
-  normalSecs.forEach(id => {
+  ['editSec','prodSec'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('hide', m === 'open');
   });
