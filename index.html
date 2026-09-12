@@ -963,7 +963,8 @@ function cancelOpenBox() {
 function loadBoxInfo(code) {
   const msg  = document.getElementById('openBoxMsg');
   const info = document.getElementById('openBoxInfo');
-  if (!code) return;
+  const qtyEl = document.getElementById('openBoxQty');
+  if (!code || !msg || !info) return;
 
   const prod = prods.find(p => p.qr === code || p.id === code);
   if (!prod) {
@@ -987,7 +988,7 @@ function loadBoxInfo(code) {
     `Stock: ${prod.stock} cajas → Al abrir se agregan ${prod.looseCount} unidades a "${looseName}"`;
   info.style.display = 'block';
   info.dataset.boxId = prod.id;
-  document.getElementById('openBoxQty').value = 1;
+  if (qtyEl) qtyEl.value = 1;
 }
 
 async function doOpenBox() {
