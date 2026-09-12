@@ -198,9 +198,9 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
 .lcid{font-weight:700;font-size:14px}
 .lcitems{font-size:11px;color:var(--t2)}
 .lcinfo{font-size:12px;color:var(--t2)}
-.modetabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
-.modetabs::-webkit-scrollbar{display:none}
-.mtab{flex:0 0 auto;padding:10px 14px;border:2px solid var(--bd);border-radius:10px;background:var(--c2);color:var(--t2);font-size:12px;font-weight:700;text-align:center;white-space:nowrap}
+.modetabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.mtab{padding:10px;border:2px solid var(--bd);border-radius:10px;background:var(--c2);color:var(--t2);font-size:12px;font-weight:700;text-align:center;white-space:nowrap}
+@media(min-width:768px){.modetabs{grid-template-columns:repeat(4,1fr)}}
 .mtab.on{border-color:var(--grn);color:var(--grn);background:rgba(0,214,143,.08)}
 .mtab.onedit{border-color:var(--blu);color:var(--blu);background:rgba(61,139,255,.08)}
 
