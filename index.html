@@ -1735,27 +1735,37 @@ function sacarSelectProd(id) {
   sacarSelectedId = id;
   document.getElementById('sacarSearchResults').style.display = 'none';
   document.getElementById('sacarScanInput').value = id;
+  document.getElementById('sacarMsg').textContent = '⏳ Buscando...';
+  document.getElementById('sacarProdInfo').style.display = 'none';
 
   // GASからイベント在庫の情報を取得
-  api({ action: 'getEventBoxList' }).then(r => {
-    if (!r.success) return;
-    let found = null;
-    for (const box of r.boxes) {
-      const item = box.items.find(i => i.id === id);
-      if (item) { found = { ...item, boxNo: box.boxNo }; break; }
-    }
-    if (!found) {
-      document.getElementById('sacarMsg').textContent = '❌ No está en el inventario de evento';
-      document.getElementById('sacarProdInfo').style.display = 'none';
-      return;
-    }
-    const p = (prods || []).find(p => p.id === id);
-    document.getElementById('sacarProdName').textContent = p ? p.name : id;
-    document.getElementById('sacarProdBox').textContent  = '📦 Caja: ' + found.boxNo;
-    document.getElementById('sacarProdQty').textContent  = '📊 Cantidad actual: ' + found.qty;
-    document.getElementById('sacarProdInfo').style.display = '';
-    document.getElementById('sacarMsg').textContent = '';
-  });
+  fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'getEventBoxList' }) })
+    .then(r => r.json())
+    .then(r => {
+      if (!r.success) {
+        document.getElementById('sacarMsg').textContent = '❌ Error al cargar inventario de evento';
+        return;
+      }
+      let found = null;
+      for (const box of r.boxes) {
+        const item = box.items.find(i => i.id === id);
+        if (item) { found = { ...item, boxNo: box.boxNo }; break; }
+      }
+      if (!found) {
+        document.getElementById('sacarMsg').textContent = '❌ No está en el inventario de evento';
+        document.getElementById('sacarProdInfo').style.display = 'none';
+        return;
+      }
+      const p = (prods || []).find(p => p.id === id);
+      document.getElementById('sacarProdName').textContent = p ? p.name : id;
+      document.getElementById('sacarProdBox').textContent  = '📦 Caja: ' + found.boxNo;
+      document.getElementById('sacarProdQty').textContent  = '📊 Cantidad actual: ' + found.qty;
+      document.getElementById('sacarProdInfo').style.display = '';
+      document.getElementById('sacarMsg').textContent = '';
+    })
+    .catch(() => {
+      document.getElementById('sacarMsg').textContent = '❌ Error de conexión';
+    });
 }
 
 function doTakeOut() {
@@ -1763,17 +1773,24 @@ function doTakeOut() {
   const btn = event.target;
   btn.disabled = true;
   btn.textContent = '⏳ Procesando...';
-  api({ action: 'eventTakeOut', scannedId: sacarSelectedId }).then(r => {
-    btn.disabled = false;
-    btn.textContent = '📤 Sacar 1 unidad';
-    if (r.success) {
-      document.getElementById('sacarProdQty').textContent = '📊 Cantidad actual: ' + r.newQty;
-      document.getElementById('sacarMsg').textContent = `✅ ${r.name} → ${r.newQty}`;
-      setTimeout(() => document.getElementById('sacarMsg').textContent = '', 3000);
-    } else {
-      document.getElementById('sacarMsg').textContent = '❌ Error: ' + (r.error || '');
-    }
-  });
+  fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'eventTakeOut', scannedId: sacarSelectedId }) })
+    .then(r => r.json())
+    .then(r => {
+      btn.disabled = false;
+      btn.textContent = '📤 Sacar 1 unidad';
+      if (r.success) {
+        document.getElementById('sacarProdQty').textContent = '📊 Cantidad actual: ' + r.newQty;
+        document.getElementById('sacarMsg').textContent = `✅ ${r.name} → ${r.newQty}`;
+        setTimeout(() => document.getElementById('sacarMsg').textContent = '', 3000);
+      } else {
+        document.getElementById('sacarMsg').textContent = '❌ Error: ' + (r.error || '');
+      }
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.textContent = '📤 Sacar 1 unidad';
+      document.getElementById('sacarMsg').textContent = '❌ Error de conexión';
+    });
 }
 
 // QRスキャナー（箱出し用）
@@ -1808,7 +1825,9 @@ function loadBoxList() {
   document.getElementById('boxListMsg').textContent = '⏳ Cargando...';
   document.getElementById('boxList').innerHTML = '';
   document.getElementById('openBoxConfirm').style.display = 'none';
-  api({ action: 'getEventBoxList' }).then(r => {
+  fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'getEventBoxList' }) })
+    .then(r => r.json())
+    .then(r => {
     document.getElementById('boxListMsg').textContent = '';
     if (!r.success || !r.boxes.length) {
       document.getElementById('boxListMsg').textContent = 'No hay datos en el inventario de evento';
@@ -1831,13 +1850,15 @@ function loadBoxList() {
 function selectEventBox(boxNo) {
   selectedBoxNo = boxNo;
   document.getElementById('confirmBoxNo').textContent = boxNo;
-  api({ action: 'getEventBoxList' }).then(r => {
-    const box = (r.boxes || []).find(b => b.boxNo === boxNo);
-    if (!box) return;
-    document.getElementById('confirmBoxItems').textContent =
-      box.items.map(i => `${i.name} × ${i.qty}`).join(' / ');
-    document.getElementById('openBoxConfirm').style.display = '';
-  });
+  fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'getEventBoxList' }) })
+    .then(r => r.json())
+    .then(r => {
+      const box = (r.boxes || []).find(b => b.boxNo === boxNo);
+      if (!box) return;
+      document.getElementById('confirmBoxItems').textContent =
+        box.items.map(i => `${i.name} × ${i.qty}`).join(' / ');
+      document.getElementById('openBoxConfirm').style.display = '';
+    });
 }
 
 function cancelOpenEventBox() {
@@ -1850,18 +1871,25 @@ function confirmOpenEventBox() {
   const btn = document.querySelector('#openBoxConfirm button:last-child');
   btn.disabled = true;
   btn.textContent = '⏳ Procesando...';
-  api({ action: 'eventOpenBox', boxNo: selectedBoxNo }).then(r => {
-    btn.disabled = false;
-    btn.textContent = '📦 Vaciar caja';
-    document.getElementById('openBoxConfirm').style.display = 'none';
-    if (r.success) {
-      document.getElementById('openBoxEventMsg').textContent = `✅ Caja ${selectedBoxNo} vaciada (${r.count} productos)`;
-      selectedBoxNo = null;
-      loadBoxList();
-    } else {
-      document.getElementById('openBoxEventMsg').textContent = '❌ ' + (r.error || '');
-    }
-  });
+  fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'eventOpenBox', boxNo: selectedBoxNo }) })
+    .then(r => r.json())
+    .then(r => {
+      btn.disabled = false;
+      btn.textContent = '📦 Vaciar caja';
+      document.getElementById('openBoxConfirm').style.display = 'none';
+      if (r.success) {
+        document.getElementById('openBoxEventMsg').textContent = `✅ Caja ${selectedBoxNo} vaciada (${r.count} productos)`;
+        selectedBoxNo = null;
+        loadBoxList();
+      } else {
+        document.getElementById('openBoxEventMsg').textContent = '❌ ' + (r.error || '');
+      }
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.textContent = '📦 Vaciar caja';
+      document.getElementById('openBoxEventMsg').textContent = '❌ Error de conexión';
+    });
 }
 </script>
 </body>
