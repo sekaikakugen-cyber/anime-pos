@@ -1702,7 +1702,7 @@ function sacarSearch() {
   const res = document.getElementById('sacarSearchResults');
   if (!q) { res.style.display = 'none'; return; }
 
-  const matches = (window._products || []).filter(p =>
+  const matches = (prods || []).filter(p =>
     p.id.toLowerCase().includes(q) ||
     p.name.toLowerCase().includes(q) ||
     (p.isbn || '').toLowerCase().includes(q)
@@ -1721,7 +1721,7 @@ function sacarSearch() {
 function sacarScanConfirm() {
   const q = document.getElementById('sacarScanInput').value.trim();
   if (!q) return;
-  const p = (window._products || []).find(p =>
+  const p = (prods || []).find(p =>
     p.id === q || p.qr === q || (p.isbn && p.isbn === q)
   );
   if (p) sacarSelectProd(p.id);
@@ -1749,7 +1749,7 @@ function sacarSelectProd(id) {
       document.getElementById('sacarProdInfo').style.display = 'none';
       return;
     }
-    const p = (window._products || []).find(p => p.id === id);
+    const p = (prods || []).find(p => p.id === id);
     document.getElementById('sacarProdName').textContent = p ? p.name : id;
     document.getElementById('sacarProdBox').textContent  = '📦 Caja: ' + found.boxNo;
     document.getElementById('sacarProdQty').textContent  = '📊 Cantidad actual: ' + found.qty;
