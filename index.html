@@ -1746,20 +1746,27 @@ function sacarSelectProd(id) {
         document.getElementById('sacarMsg').textContent = '❌ Error al cargar inventario de evento';
         return;
       }
-      let found = null;
+      // 同じ商品IDが複数の箱にある場合、全て収集
+      const foundList = [];
       for (const box of r.boxes) {
         const item = box.items.find(i => i.id === id);
-        if (item) { found = { ...item, boxNo: box.boxNo }; break; }
+        if (item) foundList.push({ ...item, boxNo: box.boxNo });
       }
-      if (!found) {
+      if (!foundList.length) {
         document.getElementById('sacarMsg').textContent = '❌ No está en el inventario de evento';
         document.getElementById('sacarProdInfo').style.display = 'none';
         return;
       }
       const p = (prods || []).find(p => p.id === id);
       document.getElementById('sacarProdName').textContent = p ? p.name : id;
-      document.getElementById('sacarProdBox').textContent  = '📦 Caja: ' + found.boxNo;
-      document.getElementById('sacarProdQty').textContent  = '📊 Cantidad actual: ' + found.qty;
+      // 複数箱を全て表示
+      document.getElementById('sacarProdBox').innerHTML = foundList.map(f =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)">
+          <span>📦 ${f.boxNo} &nbsp;×&nbsp; <strong>${f.qty}</strong> uds</span>
+          <button onclick="doTakeOut('${id}','${f.boxNo}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:7px;padding:6px 12px;font-weight:700;font-size:13px">📤 -1</button>
+        </div>`
+      ).join('');
+      document.getElementById('sacarProdQty').textContent = '📊 Total: ' + foundList.reduce((s,f)=>s+f.qty,0) + ' uds en ' + foundList.length + ' caja(s)';
       document.getElementById('sacarProdInfo').style.display = '';
       document.getElementById('sacarMsg').textContent = '';
     })
@@ -1768,19 +1775,24 @@ function sacarSelectProd(id) {
     });
 }
 
-function doTakeOut() {
-  if (!sacarSelectedId) return;
+function doTakeOut(id, boxNo) {
+  const targetId = id || sacarSelectedId;
+  if (!targetId) return;
   const btn = event.target;
   btn.disabled = true;
-  btn.textContent = '⏳ Procesando...';
-  fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'eventTakeOut', scannedId: sacarSelectedId }) })
+  btn.textContent = '⏳';
+  fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'eventTakeOut', scannedId: targetId, boxNo: boxNo || '' }) })
     .then(r => r.json())
     .then(r => {
       btn.disabled = false;
       btn.textContent = '📤 Sacar 1 unidad';
       if (r.success) {
-        document.getElementById('sacarProdQty').textContent = '📊 Cantidad actual: ' + r.newQty;
-        document.getElementById('sacarMsg').textContent = `✅ ${r.name} → ${r.newQty}`;
+        document.getElementById('sacarMsg').textContent = `✅ ${r.name} (${r.boxNo||boxNo}) → ${r.newQty}`;
+        // 該当ボタンの行の数量を更新
+        btn.disabled = false;
+        btn.textContent = '📤 -1';
+        // 商品を再検索して表示更新
+        sacarSelectProd(targetId);
         setTimeout(() => document.getElementById('sacarMsg').textContent = '', 3000);
       } else {
         document.getElementById('sacarMsg').textContent = '❌ Error: ' + (r.error || '');
