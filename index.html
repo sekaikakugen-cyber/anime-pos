@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-title" content="JapocanoPOS">
 <meta name="theme-color" content="#1a1a2e">
 <link rel="manifest" href="/anime-pos/manifest.json">
+<link rel="apple-touch-icon" href="/anime-pos/icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/anime-pos/icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/anime-pos/icon-512.png">
 <title>JapocanoPOS</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
@@ -304,6 +307,7 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
     <div class="tab" id="tab-inv" onclick="goTab('inv')"><span class="ic">📦</span>Inventario</div>
     <div class="tab" id="tab-ventas" onclick="goTab('ventas')"><span class="ic">📊</span>Ventas</div>
     <div class="tab" id="tab-entrada" onclick="goTab('entrada')"><span class="ic">📥</span>Entrada</div>
+    <div class="tab" id="tab-sacar" onclick="goTab('sacar')"><span class="ic">📤</span>Sacar</div>
   </div>
 
   <!-- CAJA -->
@@ -514,6 +518,73 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
       </div>
     </div>
   </div>
+
+  <!-- SACAR (箱出し) -->
+  <div class="pane hide" id="tc-sacar">
+    <div class="p14" style="max-width:520px;margin:0 auto">
+
+      <!-- モード切替 -->
+      <div class="modetabs" style="margin-bottom:16px">
+        <button class="mtab on" id="st-individual" onclick="setSacarMode('individual')">🔍 Individual</button>
+        <button class="mtab" id="st-caja" onclick="setSacarMode('caja')">📦 Abrir caja</button>
+      </div>
+
+      <!-- 個別取り出し -->
+      <div id="sacar-individual">
+        <div class="esec">
+          <div class="esh">🔍 Sacar producto individual</div>
+          <div class="esb">
+            <div class="el">ESCANEAR O BUSCAR PRODUCTO</div>
+            <div style="display:flex;gap:8px">
+              <input id="sacarScanInput" class="epi" placeholder="Escanear QR / ISBN o buscar..." oninput="sacarSearch()" onkeydown="if(event.key==='Enter')sacarScanConfirm()" style="flex:1">
+              <button onclick="openSacarScanner()" style="background:var(--blu);border:none;color:#fff;border-radius:9px;padding:11px 14px;font-size:18px">📷</button>
+            </div>
+
+            <!-- 検索結果 -->
+            <div id="sacarSearchResults" style="display:none;margin-top:8px;border:1px solid var(--bd);border-radius:10px;overflow:hidden;max-height:220px;overflow-y:auto"></div>
+
+            <!-- 選択した商品の情報 -->
+            <div id="sacarProdInfo" style="display:none;margin-top:12px;background:var(--c2);border:1px solid var(--bd);border-radius:10px;padding:12px">
+              <div id="sacarProdName" style="font-weight:700;font-size:15px;color:var(--t1);margin-bottom:4px"></div>
+              <div id="sacarProdBox" style="font-size:13px;color:var(--t2);margin-bottom:4px"></div>
+              <div id="sacarProdQty" style="font-size:13px;color:var(--t2);margin-bottom:12px"></div>
+              <button onclick="doTakeOut()" style="width:100%;background:var(--red,#e53935);border:none;color:#fff;border-radius:9px;padding:13px;font-weight:700;font-size:15px">
+                📤 Sacar 1 unidad
+              </button>
+            </div>
+            <div id="sacarMsg" style="font-size:13px;min-height:16px;margin-top:6px;text-align:center"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 箱ごと開封 -->
+      <div id="sacar-caja" style="display:none">
+        <div class="esec">
+          <div class="esh">📦 Abrir caja completa</div>
+          <div class="esb">
+            <button onclick="loadBoxList()" style="width:100%;background:var(--blu);border:none;color:#fff;border-radius:9px;padding:13px;font-weight:700;font-size:14px;margin-bottom:8px">
+              🔄 Cargar lista de cajas
+            </button>
+            <div id="boxListMsg" style="font-size:12px;min-height:16px"></div>
+            <div id="boxList" style="margin-top:4px"></div>
+
+            <!-- 確認ダイアログ -->
+            <div id="openBoxConfirm" style="display:none;background:var(--c2);border:1px solid var(--red,#e53935);border-radius:10px;padding:14px;margin-top:8px">
+              <div style="font-weight:700;font-size:14px;color:var(--t1);margin-bottom:6px">⚠️ ¿Abrir caja <span id="confirmBoxNo"></span>?</div>
+              <div id="confirmBoxItems" style="font-size:12px;color:var(--t2);margin-bottom:10px"></div>
+              <div style="display:flex;gap:8px">
+                <button onclick="cancelOpenEventBox()" style="flex:1;background:var(--c2);border:1px solid var(--bd);color:var(--t2);border-radius:9px;padding:11px;font-weight:700">Cancelar</button>
+                <button onclick="confirmOpenEventBox()" style="flex:2;background:var(--red,#e53935);border:none;color:#fff;border-radius:9px;padding:11px;font-weight:700">📦 Vaciar caja</button>
+              </div>
+            </div>
+            <div id="openBoxEventMsg" style="font-size:13px;min-height:16px;margin-top:6px;text-align:center"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
 <!-- PICKER -->
@@ -575,7 +646,38 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
 // ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
-let GAS    = localStorage.getItem('gasUrl') || '';
+// ═══════════════════════════════════════════════════
+// UNIVERSAL PRODUCT SEARCH
+// ID・QR・ISBN・名前・カテゴリー全てで検索
+// ═══════════════════════════════════════════════════
+function findProd(code) {
+  if (!code) return null;
+  const c = String(code).trim().toLowerCase();
+  return prods.find(p =>
+    p.id.toLowerCase() === c ||
+    p.qr.toLowerCase() === c ||
+    (p.isbn && p.isbn.toLowerCase() === c) ||
+    p.name.toLowerCase().includes(c) ||
+    p.category.toLowerCase().includes(c)
+  ) || null;
+}
+
+function filterProdsBy(query) {
+  if (!query) return [];
+  const q = query.trim().toLowerCase();
+  return prods.filter(p =>
+    p.id.toLowerCase().includes(q) ||
+    p.qr.toLowerCase().includes(q) ||
+    (p.isbn && p.isbn.toLowerCase().includes(q)) ||
+    p.name.toLowerCase().includes(q) ||
+    p.category.toLowerCase().includes(q)
+  );
+}
+
+// GASのURLを固定（再入力不要）
+const GAS_FIXED = 'https://script.google.com/macros/s/AKfycbyyjnnH2M8xsmngZQWNFXd9-kTvGQcW-nAzTL29zg8jbD7YKBNt_nARnMY1Onh8ahYP/exec';
+let GAS = GAS_FIXED;
+localStorage.setItem('gasUrl', GAS_FIXED); // 常に最新URLを保存
 let prods  = [];
 let staff  = [];
 let me     = null;
@@ -598,8 +700,9 @@ let customer = null; // 現在選択中の顧客
 // BOOT
 // ═══════════════════════════════════════════════════
 window.addEventListener('load', () => {
-  if (GAS) { showScr('login'); loadData(); }
-  else      { showScr('setup'); }
+  // GASのURLは固定なのでセットアップ画面をスキップ
+  showScr('login');
+  loadData();
   updateNet();
 });
 window.addEventListener('online',  () => { online = true;  updateNet(); syncOffline(); });
@@ -718,13 +821,16 @@ function doLogout() { me = null; selStaffId = null; pinBuf = ''; showScr('login'
 // TABS
 // ═══════════════════════════════════════════════════
 function goTab(t) {
-  ['caja','inv','ventas','entrada'].forEach(x => {
+  ['caja','inv','ventas','entrada','sacar'].forEach(x => {
     document.getElementById('tab-'+x).className   = 'tab' + (x===t?' on':'');
     document.getElementById('tc-'+x).className    = 'pane' + (x!==t?' hide':'');
   });
   if (t === 'entrada' && window.innerWidth >= 768) {
     document.getElementById('lotListPanel').style.display = 'block';
     loadLots();
+  }
+  if (t === 'sacar') {
+    setSacarMode('individual');
   }
 }
 
@@ -738,18 +844,14 @@ function renderProds(filter) {
   if (!f) { el.innerHTML = ''; el.style.display = 'none'; return; }
   el.style.display = 'grid';
   const fl = f.toLowerCase();
-  const list = prods.filter(p =>
-    p.name.toLowerCase().includes(fl) ||
-    p.category.toLowerCase().includes(fl) ||
-    p.qr.includes(fl)
-  );
+  const list = filterProdsBy(filter);
   if (!list.length) { el.innerHTML = '<div class="loading">No se encontraron productos</div>'; return; }
   el.innerHTML = list.map(p => {
-    // L列（バラ変換先）が設定されている場合はバラ商品の在庫を参照
-    const looseProd = p.looseId ? prods.find(pr => pr.id === p.looseId) : null;
+    // 箱商品（canOpen=Si）は自分の在庫、バラ販売商品はバラ変換先の在庫を参照
+    const looseProd = (p.looseId && p.canOpen !== 'Si') ? prods.find(pr => pr.id === p.looseId) : null;
     const decrement = p.stockDecrement || 1;
     const effectiveStock = looseProd
-      ? Math.floor(Number(looseProd.stock) / decrement) // バラ在庫÷減算数＝販売可能数
+      ? Math.floor(Number(looseProd.stock) / decrement)
       : Number(p.stock);
     const wn  = Number(p.warnStock);
     const cls = effectiveStock === 0 ? 'pc out' : effectiveStock <= wn ? 'pc warn' : 'pc';
@@ -769,14 +871,15 @@ function filterProds(v) { renderProds(v); }
 function addToCart(id) {
   const p = prods.find(x => x.id === id); if (!p) return;
 
-  // 在庫チェック（バラ変換先がある場合はバラ商品の在庫を参照）
-  const looseProd = p.looseId ? prods.find(pr => pr.id === p.looseId) : null;
+  // 在庫チェック
+  // 箱商品（canOpen=Si）は自分の在庫を参照
+  // バラ販売商品（looseId設定あり・canOpen≠Si）はバラ変換先の在庫を参照
+  const looseProd = (p.looseId && p.canOpen !== 'Si') ? prods.find(pr => pr.id === p.looseId) : null;
   const decrement = p.stockDecrement || 1;
   const effectiveStock = looseProd
     ? Math.floor(Number(looseProd.stock) / decrement)
     : Number(p.stock);
 
-  // カート内の既存数量を確認
   const currentQty = cart.find(x => x.id === id)?.qty || 0;
   if (effectiveStock <= currentQty) {
     alert(`在庫が不足しています（残り${effectiveStock}）`);
@@ -932,7 +1035,7 @@ function filterOpenBox(q) {
   const f   = (q || '').toLowerCase();
   const list = prods.filter(p =>
     p.canOpen === 'Si' &&
-    (!f || p.name.toLowerCase().includes(f) || p.category.toLowerCase().includes(f) || p.id.toLowerCase().includes(f))
+    (!f || filterProdsBy(q).includes(p))
   );
   if (!list.length) {
     el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>';
@@ -967,7 +1070,7 @@ function loadBoxInfo(code) {
   const qtyEl = document.getElementById('openBoxQty');
   if (!code || !msg || !info) return;
 
-  const prod = prods.find(p => p.qr === code || p.id === code);
+  const prod = findProd(code);
   if (!prod) {
     msg.style.color = 'var(--red)';
     msg.textContent = '❌ Producto no encontrado: ' + code;
@@ -1110,7 +1213,7 @@ function closeSuc() {
 function renderInv(filter) {
   const el = document.getElementById('invList');
   const f  = (filter || '').toLowerCase();
-  const list = prods.filter(p => !f || p.name.toLowerCase().includes(f) || p.category.toLowerCase().includes(f));
+  const list = prods.filter(p => !f || filterProdsBy(f).includes(p));
   if (!list.length) { el.innerHTML = '<div class="loading">Sin productos</div>'; return; }
   el.innerHTML = list.map(p => {
     const st  = Number(p.stock), wn = Number(p.warnStock);
@@ -1492,7 +1595,7 @@ function filterPicker(q) {
   const f      = (q||'').toLowerCase();
   const list   = prods.filter(p =>
     !added.includes(p.id) &&
-    (!f || p.name.toLowerCase().includes(f) || p.category.toLowerCase().includes(f) || p.isbn.includes(f) || p.id.toLowerCase().includes(f))
+    (!f || filterProdsBy(f).includes(p))
   );
   if (!list.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>'; return; }
   el.innerHTML = list.map(p => `
@@ -1528,8 +1631,8 @@ async function startScanner() {
     if (qrScanner) { try { await qrScanner.stop(); } catch(e){} qrScanner = null; }
     qrScanner = new Html5Qrcode('scanReg');
     const cfg = scanCtx === 'caja'
-      ? { fps:15, qrbox:{width:260,height:260}, formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE] }
-      : { fps:15, qrbox:{width:320,height:160}, formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.UPC_A] };
+      ? { fps:30, qrbox:{width:220,height:220}, aspectRatio:1.0, formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE] }
+      : { fps:30, qrbox:{width:280,height:140}, aspectRatio:1.777, formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.UPC_A] };
     await qrScanner.start({ facingMode:'environment' }, cfg, async (code) => {
       await closeScan();
       setTimeout(() => handleCode(code), 100);
@@ -1549,7 +1652,7 @@ function doManScan() {
 }
 function handleCode(code) {
   if (scanCtx === 'caja') {
-    const p = prods.find(x => x.qr === code || x.id === code);
+    const p = findProd(code);
     if (p) addToCart(p.id);
     else alert('Producto no encontrado: ' + code);
   } else if (scanCtx === 'openbox') {
@@ -1558,7 +1661,7 @@ function handleCode(code) {
   } else if (scanCtx === 'customer') {
     loadCustomer(code);
   } else if (scanCtx === 'picker') {
-    const p = prods.find(x => x.isbn === code || x.qr === code || x.id === code);
+    const p = findProd(code);
     if (p) addEProd(p.id);
     else {
       document.getElementById('pickQ').value = code;
@@ -1574,6 +1677,190 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/anime-pos/sw.js')
       .then(reg => console.log('SW登録完了:', reg.scope))
       .catch(err => console.log('SW登録失敗:', err));
+  });
+}
+
+// ============================================================
+// 📤 SACAR（箱出し）
+// ============================================================
+let sacarSelectedId = null;
+
+function setSacarMode(mode) {
+  document.getElementById('sacar-individual').style.display = mode === 'individual' ? '' : 'none';
+  document.getElementById('sacar-caja').style.display       = mode === 'caja'       ? '' : 'none';
+  document.getElementById('st-individual').classList.toggle('on', mode === 'individual');
+  document.getElementById('st-caja').classList.toggle('on', mode === 'caja');
+  sacarSelectedId = null;
+  document.getElementById('sacarProdInfo').style.display = 'none';
+  document.getElementById('sacarSearchResults').style.display = 'none';
+  document.getElementById('sacarMsg').textContent = '';
+}
+
+// 検索
+function sacarSearch() {
+  const q = document.getElementById('sacarScanInput').value.trim().toLowerCase();
+  const res = document.getElementById('sacarSearchResults');
+  if (!q) { res.style.display = 'none'; return; }
+
+  const matches = (window._products || []).filter(p =>
+    p.id.toLowerCase().includes(q) ||
+    p.name.toLowerCase().includes(q) ||
+    (p.isbn || '').toLowerCase().includes(q)
+  ).slice(0, 10);
+
+  if (!matches.length) { res.style.display = 'none'; return; }
+  res.style.display = '';
+  res.innerHTML = matches.map(p =>
+    `<div onclick="sacarSelectProd('${p.id}')" style="padding:10px 14px;border-bottom:1px solid var(--bd);cursor:pointer;background:var(--c1)">
+      <div style="font-weight:600;font-size:14px;color:var(--t1)">${p.name}</div>
+      <div style="font-size:12px;color:var(--t2)">${p.id} · ${p.category}</div>
+    </div>`
+  ).join('');
+}
+
+function sacarScanConfirm() {
+  const q = document.getElementById('sacarScanInput').value.trim();
+  if (!q) return;
+  const p = (window._products || []).find(p =>
+    p.id === q || p.qr === q || (p.isbn && p.isbn === q)
+  );
+  if (p) sacarSelectProd(p.id);
+  else {
+    document.getElementById('sacarMsg').textContent = '❌ Producto no encontrado';
+    document.getElementById('sacarProdInfo').style.display = 'none';
+  }
+}
+
+function sacarSelectProd(id) {
+  sacarSelectedId = id;
+  document.getElementById('sacarSearchResults').style.display = 'none';
+  document.getElementById('sacarScanInput').value = id;
+
+  // GASからイベント在庫の情報を取得
+  api({ action: 'getEventBoxList' }).then(r => {
+    if (!r.success) return;
+    let found = null;
+    for (const box of r.boxes) {
+      const item = box.items.find(i => i.id === id);
+      if (item) { found = { ...item, boxNo: box.boxNo }; break; }
+    }
+    if (!found) {
+      document.getElementById('sacarMsg').textContent = '❌ No está en el inventario de evento';
+      document.getElementById('sacarProdInfo').style.display = 'none';
+      return;
+    }
+    const p = (window._products || []).find(p => p.id === id);
+    document.getElementById('sacarProdName').textContent = p ? p.name : id;
+    document.getElementById('sacarProdBox').textContent  = '📦 Caja: ' + found.boxNo;
+    document.getElementById('sacarProdQty').textContent  = '📊 Cantidad actual: ' + found.qty;
+    document.getElementById('sacarProdInfo').style.display = '';
+    document.getElementById('sacarMsg').textContent = '';
+  });
+}
+
+function doTakeOut() {
+  if (!sacarSelectedId) return;
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '⏳ Procesando...';
+  api({ action: 'eventTakeOut', scannedId: sacarSelectedId }).then(r => {
+    btn.disabled = false;
+    btn.textContent = '📤 Sacar 1 unidad';
+    if (r.success) {
+      document.getElementById('sacarProdQty').textContent = '📊 Cantidad actual: ' + r.newQty;
+      document.getElementById('sacarMsg').textContent = `✅ ${r.name} → ${r.newQty}`;
+      setTimeout(() => document.getElementById('sacarMsg').textContent = '', 3000);
+    } else {
+      document.getElementById('sacarMsg').textContent = '❌ Error: ' + (r.error || '');
+    }
+  });
+}
+
+// QRスキャナー（箱出し用）
+let sacarScanner = null;
+function openSacarScanner() {
+  const overlay = document.createElement('div');
+  overlay.id = 'sacarScanOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center';
+  overlay.innerHTML = `
+    <video id="sacarScanVideo" style="width:100%;max-width:400px;border-radius:12px"></video>
+    <button onclick="closeSacarScanner()" style="margin-top:20px;background:#fff;border:none;border-radius:9px;padding:12px 32px;font-weight:700;font-size:15px">✕ Cerrar</button>`;
+  document.body.appendChild(overlay);
+  sacarScanner = new Instascan.Scanner({ video: document.getElementById('sacarScanVideo'), mirror: false });
+  sacarScanner.addListener('scan', val => {
+    closeSacarScanner();
+    document.getElementById('sacarScanInput').value = val;
+    sacarScanConfirm();
+  });
+  Instascan.Camera.getCameras().then(cams => {
+    if (cams.length) sacarScanner.start(cams[cams.length - 1]);
+  });
+}
+function closeSacarScanner() {
+  if (sacarScanner) { sacarScanner.stop(); sacarScanner = null; }
+  const el = document.getElementById('sacarScanOverlay');
+  if (el) el.remove();
+}
+
+// 箱一覧
+let selectedBoxNo = null;
+function loadBoxList() {
+  document.getElementById('boxListMsg').textContent = '⏳ Cargando...';
+  document.getElementById('boxList').innerHTML = '';
+  document.getElementById('openBoxConfirm').style.display = 'none';
+  api({ action: 'getEventBoxList' }).then(r => {
+    document.getElementById('boxListMsg').textContent = '';
+    if (!r.success || !r.boxes.length) {
+      document.getElementById('boxListMsg').textContent = 'No hay datos en el inventario de evento';
+      return;
+    }
+    const boxes = r.boxes.filter(b => b.boxNo !== '（未割当）' && b.totalQty > 0);
+    if (!boxes.length) {
+      document.getElementById('boxListMsg').textContent = 'No hay cajas con stock';
+      return;
+    }
+    document.getElementById('boxList').innerHTML = boxes.map(b =>
+      `<div onclick="selectEventBox('${b.boxNo}')" style="padding:12px 14px;border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;cursor:pointer;background:var(--c1)">
+        <div style="font-weight:700;font-size:14px;color:var(--t1)">📦 ${b.boxNo}</div>
+        <div style="font-size:12px;color:var(--t2)">Tipos: ${b.items.length} · Total: ${b.totalQty} uds</div>
+      </div>`
+    ).join('');
+  });
+}
+
+function selectEventBox(boxNo) {
+  selectedBoxNo = boxNo;
+  document.getElementById('confirmBoxNo').textContent = boxNo;
+  api({ action: 'getEventBoxList' }).then(r => {
+    const box = (r.boxes || []).find(b => b.boxNo === boxNo);
+    if (!box) return;
+    document.getElementById('confirmBoxItems').textContent =
+      box.items.map(i => `${i.name} × ${i.qty}`).join(' / ');
+    document.getElementById('openBoxConfirm').style.display = '';
+  });
+}
+
+function cancelOpenEventBox() {
+  selectedBoxNo = null;
+  document.getElementById('openBoxConfirm').style.display = 'none';
+}
+
+function confirmOpenEventBox() {
+  if (!selectedBoxNo) return;
+  const btn = document.querySelector('#openBoxConfirm button:last-child');
+  btn.disabled = true;
+  btn.textContent = '⏳ Procesando...';
+  api({ action: 'eventOpenBox', boxNo: selectedBoxNo }).then(r => {
+    btn.disabled = false;
+    btn.textContent = '📦 Vaciar caja';
+    document.getElementById('openBoxConfirm').style.display = 'none';
+    if (r.success) {
+      document.getElementById('openBoxEventMsg').textContent = `✅ Caja ${selectedBoxNo} vaciada (${r.count} productos)`;
+      selectedBoxNo = null;
+      loadBoxList();
+    } else {
+      document.getElementById('openBoxEventMsg').textContent = '❌ ' + (r.error || '');
+    }
   });
 }
 </script>
