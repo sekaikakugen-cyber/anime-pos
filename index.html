@@ -1738,21 +1738,11 @@ function sacarSelectProd(id) {
   document.getElementById('sacarMsg').textContent = '⏳ Buscando...';
   document.getElementById('sacarProdInfo').style.display = 'none';
 
-  // GASからイベント在庫の情報を取得
-  fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'getEventBoxList' }) })
+  // GASから指定商品のイベント在庫のみ取得（高速）
+  fetch(GAS, { method: 'POST', body: JSON.stringify({ action: 'getEventStock', productId: id }) })
     .then(r => r.json())
     .then(r => {
       if (!r.success) {
-        document.getElementById('sacarMsg').textContent = '❌ Error al cargar inventario de evento';
-        return;
-      }
-      // 同じ商品IDが複数の箱にある場合、全て収集
-      const foundList = [];
-      for (const box of r.boxes) {
-        const item = box.items.find(i => i.id === id);
-        if (item) foundList.push({ ...item, boxNo: box.boxNo });
-      }
-      if (!foundList.length) {
         document.getElementById('sacarMsg').textContent = '❌ No está en el inventario de evento';
         document.getElementById('sacarProdInfo').style.display = 'none';
         return;
@@ -1760,13 +1750,13 @@ function sacarSelectProd(id) {
       const p = (prods || []).find(p => p.id === id);
       document.getElementById('sacarProdName').textContent = p ? p.name : id;
       // 複数箱を全て表示
-      document.getElementById('sacarProdBox').innerHTML = foundList.map(f =>
+      document.getElementById('sacarProdBox').innerHTML = r.items.map(f =>
         `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd)">
           <span>📦 ${f.boxNo} &nbsp;×&nbsp; <strong>${f.qty}</strong> uds</span>
           <button onclick="doTakeOut('${id}','${f.boxNo}')" style="background:var(--red,#e53935);border:none;color:#fff;border-radius:7px;padding:6px 12px;font-weight:700;font-size:13px">📤 -1</button>
         </div>`
       ).join('');
-      document.getElementById('sacarProdQty').textContent = '📊 Total: ' + foundList.reduce((s,f)=>s+f.qty,0) + ' uds en ' + foundList.length + ' caja(s)';
+      document.getElementById('sacarProdQty').textContent = '📊 Total: ' + r.items.reduce((s,f)=>s+f.qty,0) + ' uds en ' + r.items.length + ' caja(s)';
       document.getElementById('sacarProdInfo').style.display = '';
       document.getElementById('sacarMsg').textContent = '';
     })
