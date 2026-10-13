@@ -315,7 +315,7 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
     <div class="p14">
       <div>
         <div class="srow">
-          <input id="pSearch" placeholder="🔍 Buscar producto por nombre o categoría..." oninput="filterProds(this.value)" style="border-radius:10px">
+          <input id="pSearch" placeholder="🔍 Buscar producto por nombre o categoría..." oninput="filterProdsD(this.value)" style="border-radius:10px">
           <button class="scnbtn" onclick="openScan('caja')">📷</button>
         </div>
         <!-- 顧客エリア -->
@@ -367,7 +367,7 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
   <!-- INVENTARIO -->
   <div class="pane hide" id="tc-inv">
     <div class="p14">
-      <input placeholder="Buscar por nombre o categoría..." oninput="filterInv(this.value)" style="margin-bottom:12px">
+      <input placeholder="Buscar por nombre o categoría..." oninput="filterInvD(this.value)" style="margin-bottom:12px">
       <div id="invList"><div class="loading">Cargando...</div></div>
     </div>
   </div>
@@ -536,7 +536,7 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
           <div class="esb">
             <div class="el">ESCANEAR O BUSCAR PRODUCTO</div>
             <div style="display:flex;gap:8px">
-              <input id="sacarScanInput" class="epi" placeholder="Escanear QR / ISBN o buscar..." oninput="sacarSearch()" onkeydown="if(event.key==='Enter')sacarScanConfirm()" style="flex:1">
+              <input id="sacarScanInput" class="epi" placeholder="Escanear QR / ISBN o buscar..." oninput="sacarSearchD()" onkeydown="if(event.key==='Enter')sacarScanConfirm()" style="flex:1">
               <button onclick="openSacarScanner()" style="background:var(--blu);border:none;color:#fff;border-radius:9px;padding:11px 14px;font-size:18px">📷</button>
             </div>
 
@@ -595,7 +595,7 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
       <button class="pickcl" onclick="closePick()">✕</button>
     </div>
     <div class="picksearch">
-      <input id="pickQ" placeholder="Buscar por nombre, categoría, ISBN..." oninput="filterPicker(this.value)">
+      <input id="pickQ" placeholder="Buscar por nombre, categoría, ISBN..." oninput="filterPickerD(this.value)">
       <button class="pickcambtn" onclick="openScan('picker')">📷</button>
     </div>
     <div class="picklist" id="pickList"></div>
@@ -866,7 +866,14 @@ function renderProds(filter) {
     </div>`;
   }).join('');
 }
+// ── デバウンス（入力後300ms待ってから実行）──
+function debounce(fn, ms) {
+  let t;
+  return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), ms); };
+}
+
 function filterProds(v) { renderProds(v); }
+const filterProdsD = debounce(filterProds, 300);
 
 function addToCart(id) {
   const p = prods.find(x => x.id === id); if (!p) return;
@@ -1232,6 +1239,9 @@ function renderInv(filter) {
   }).join('');
 }
 function filterInv(v) { renderInv(v); }
+const filterInvD    = debounce(filterInv, 300);
+const filterPickerD = debounce(filterPicker, 300);
+const sacarSearchD  = debounce(sacarSearch, 300);
 
 // ═══════════════════════════════════════════════════
 // VENTAS
@@ -1593,10 +1603,12 @@ function filterPicker(q) {
   const el     = document.getElementById('pickList');
   const added  = eProds.map(p => p.id);
   const f      = (q||'').toLowerCase();
+  // 文字なしの時は何も表示しない（全件描画を防ぐ）
+  if (!f) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">Escribe para buscar...</div>'; return; }
   const list   = prods.filter(p =>
     !added.includes(p.id) &&
-    (!f || filterProdsBy(f).includes(p))
-  );
+    filterProdsBy(f).includes(p)
+  ).slice(0, 30); // 上位30件のみ表示
   if (!list.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>'; return; }
   el.innerHTML = list.map(p => `
     <div class="pki" onclick="addEProd('${p.id}')">
