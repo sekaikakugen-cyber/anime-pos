@@ -379,18 +379,12 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
         <div class="sc"><div class="scl">VENTAS HOY</div><div class="scv" id="sv1" style="color:var(--grn)">MXN 0</div></div>
         <div class="sc"><div class="scl">TRANSACCIONES</div><div class="scv" id="sv2" style="color:var(--yel)">0</div></div>
         <div class="sc"><div class="scl">DESCUENTOS</div><div class="scv" id="sv3" style="color:var(--red)">MXN 0</div></div>
-                <div class="sc"><div class="scl">SIN SYNC</div><div class="scv" id="sv4" style="color:var(--t2)">0</div></div>
-      </div>
-      <div style="text-align:center;padding:8px 0">
-        <button id="retrySyncBtn" onclick="syncOffline()" style="display:none;padding:8px 20px;background:#c62828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🔄 再送信</button>
+        <div class="sc"><div class="scl">SIN SYNC</div><div class="scv" id="sv4" style="color:var(--t2)">0</div></div>
       </div>
       <div id="saleList"><div class="loading">Sin ventas</div></div>
     </div>
   </div>
 
-  const rb = document.getElementById('retrySyncBtn');
-  if (rb) rb.style.display = offline.length > 0 ? 'inline-block' : 'none';
-  
   <!-- ENTRADA -->
   <div class="pane hide" id="tc-entrada">
     <div class="p14">
@@ -724,8 +718,6 @@ function updateNet() {
   b.textContent = online ? '● En línea' : '● Sin conexión';
   b.className   = 'nbadge' + (online ? '' : ' off');
   document.getElementById('sv4').textContent = offline.length;
-  const rb = document.getElementById('retrySyncBtn');
-  if (rb) rb.style.display = offline.length > 0 ? 'inline-block' : 'none';
 }
 
 // ═══════════════════════════════════════════════════
@@ -1204,12 +1196,9 @@ async function doCobrar() {
     }
   });
 
-if (online) {
-    const ok = await trySendSale(payload);   // ← 変更A の関数を使う
-    if (!ok) {                               // 失敗したらキューに入れる
-      offline.push(payload);
-      localStorage.setItem('offlineSales', JSON.stringify(offline));
-    }
+  if (online) {
+    try { await fetch(GAS, { method:'POST', body: JSON.stringify(payload) }); }
+    catch(e) { offline.push(payload); localStorage.setItem('offlineSales', JSON.stringify(offline)); _paying = false; }
   } else {
     offline.push(payload);
     localStorage.setItem('offlineSales', JSON.stringify(offline));
@@ -1276,73 +1265,19 @@ function renderVentas() {
       ${r.discount ? `<span style="font-size:11px;color:var(--grn);margin-left:6px">-MXN ${r.discount.toLocaleString()}</span>` : ''}
     </div>`).join('');
 }
-  
-// 1件の売上を送信し、成功=true / 失敗=false を返す
-async function trySendSale(payload) {
-  try {
-    const res = await fetch(GAS, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      console.warn('[POS] HTTP Error', res.status, payload.txnId);
-      return false;                        // HTTP 500/503 等
-    }
-    let d;
-    try { d = await res.json(); } catch(e) { return false; }
-    if (d && d.success === false) {
-      console.warn('[POS] GAS Error', d.error, payload.txnId);
-      return false;                        // GAS がエラーを返した
-    }
-    return true;                           // 正常送信
-  } catch(e) {
-    console.warn('[POS] Fetch failed', e.message, payload.txnId);
-    return false;                          // ネットワーク例外
-  }
-}
 
 async function syncOffline() {
   if (!offline.length || !online) return;
   const toSync = [...offline];
   offline = [];
   localStorage.setItem('offlineSales', '[]');
-  updateNet();
-
-  const failed = [];
   for (const p of toSync) {
-    const ok = await trySendSale(p);         // ← 変更A の関数を使う
-    if (!ok) failed.push(p);                 // 失敗したものを収集
+    try { await fetch(GAS, { method:'POST', body: JSON.stringify(p) }); }
+    catch(e) { offline.push(p); }
   }
-
-  if (failed.length > 0) {
-    offline = failed.concat(offline);        // 失敗分を再キューに戻す
-    localStorage.setItem('offlineSales', JSON.stringify(offline));
-    showSyncStatus('⚠️ ' + failed.length + '件 未同期。再送信してください', 'warn');
-  } else if (toSync.length > 0) {
-    showSyncStatus('✅ ' + toSync.length + '件 同期完了', 'ok');
-  }
+  localStorage.setItem('offlineSales', JSON.stringify(offline));
   updateNet();
 }
-
-// 同期結果トースト通知
-function showSyncStatus(msg, type) {
-  let el = document.getElementById('syncToast');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'syncToast';
-    el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);' +
-      'padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;' +
-      'z-index:9999;box-shadow:0 2px 12px rgba(0,0,0,.4);transition:opacity .4s;pointer-events:none';
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  el.style.background = type === 'ok' ? '#2e7d32' : '#c62828';
-  el.style.color = '#fff';
-  el.style.opacity = '1';
-  clearTimeout(el._t);
-  el._t = setTimeout(() => { el.style.opacity = '0'; }, type === 'warn' ? 10000 : 4000);
-}
-
 setInterval(() => { if (online) syncOffline(); }, 60000);
 
 // ═══════════════════════════════════════════════════
