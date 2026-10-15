@@ -387,8 +387,7 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
       <div id="saleList"><div class="loading">Sin ventas</div></div>
     </div>
   </div>
-  
-  // ← この行は既存: document.getElementById('sv4').textContent = offline.length;
+
   const rb = document.getElementById('retrySyncBtn');
   if (rb) rb.style.display = offline.length > 0 ? 'inline-block' : 'none';
   
