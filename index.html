@@ -1265,7 +1265,31 @@ function renderVentas() {
       ${r.discount ? `<span style="font-size:11px;color:var(--grn);margin-left:6px">-MXN ${r.discount.toLocaleString()}</span>` : ''}
     </div>`).join('');
 }
-
+  
+// 1件の売上を送信し、成功=true / 失敗=false を返す
+async function trySendSale(payload) {
+  try {
+    const res = await fetch(GAS, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      console.warn('[POS] HTTP Error', res.status, payload.txnId);
+      return false;                        // HTTP 500/503 等
+    }
+    let d;
+    try { d = await res.json(); } catch(e) { return false; }
+    if (d && d.success === false) {
+      console.warn('[POS] GAS Error', d.error, payload.txnId);
+      return false;                        // GAS がエラーを返した
+    }
+    return true;                           // 正常送信
+  } catch(e) {
+    console.warn('[POS] Fetch failed', e.message, payload.txnId);
+    return false;                          // ネットワーク例外
+  }
+}
+  
 async function syncOffline() {
   if (!offline.length || !online) return;
   const toSync = [...offline];
