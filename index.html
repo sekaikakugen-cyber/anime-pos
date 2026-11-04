@@ -382,6 +382,24 @@ input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,5
         <div class="sc"><div class="scl">SIN SYNC</div><div class="scv" id="sv4" style="color:var(--t2)">0</div></div>
       </div>
       <div id="saleList"><div class="loading">Sin ventas</div></div>
+
+      <!-- カテゴリー別レポート -->
+      <div style="margin-top:18px">
+        <div style="font-size:12px;font-weight:700;color:var(--t2);letter-spacing:.08em;margin-bottom:10px">📊 REPORTE POR CATEGORÍA</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <button onclick="setReportPeriod('today')"   id="rp-today"   style="font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--red);color:#fff;font-weight:700">Hoy</button>
+          <button onclick="setReportPeriod('week')"    id="rp-week"    style="font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--c2);color:var(--t2)">Esta semana</button>
+          <button onclick="setReportPeriod('month')"   id="rp-month"   style="font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--c2);color:var(--t2)">Este mes</button>
+          <button onclick="setReportPeriod('custom')"  id="rp-custom"  style="font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--c2);color:var(--t2)">Personalizado</button>
+        </div>
+        <div id="rp-custom-range" style="display:none;display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
+          <input type="date" id="rp-from" style="font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--c2);color:var(--t1)">
+          <span style="color:var(--t2)">〜</span>
+          <input type="date" id="rp-to"   style="font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--c2);color:var(--t1)">
+          <button onclick="loadReport()" style="font-size:12px;padding:6px 14px;border-radius:8px;border:none;background:var(--blu);color:#fff;font-weight:700">検索</button>
+        </div>
+        <div id="reportArea"><div style="font-size:13px;color:var(--t2);text-align:center;padding:20px">レポートを選択してください</div></div>
+      </div>
     </div>
   </div>
 
@@ -1266,6 +1284,110 @@ function renderVentas() {
     </div>`).join('');
 }
 
+// ═══════════════════════════════════════════════════
+// カテゴリー別レポート
+// ═══════════════════════════════════════════════════
+let currentReportPeriod = 'today';
+
+function setReportPeriod(p) {
+  currentReportPeriod = p;
+  ['today','week','month','custom'].forEach(id => {
+    const btn = document.getElementById('rp-' + id);
+    if (btn) {
+      btn.style.background = id === p ? 'var(--red)' : 'var(--c2)';
+      btn.style.color      = id === p ? '#fff'       : 'var(--t2)';
+    }
+  });
+  const customRange = document.getElementById('rp-custom-range');
+  if (customRange) customRange.style.display = p === 'custom' ? 'flex' : 'none';
+  if (p !== 'custom') loadReport();
+}
+
+async function loadReport() {
+  const area = document.getElementById('reportArea');
+  if (!area) return;
+  area.innerHTML = '<div style="font-size:13px;color:var(--t2);text-align:center;padding:20px">⏳ Cargando...</div>';
+
+  const now   = new Date();
+  let fromStr = '', toStr = '';
+
+  if (currentReportPeriod === 'today') {
+    fromStr = toStr = now.toLocaleDateString('en-CA', {timeZone:'America/Monterrey'});
+  } else if (currentReportPeriod === 'week') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - d.getDay());
+    fromStr = d.toLocaleDateString('en-CA', {timeZone:'America/Monterrey'});
+    toStr   = now.toLocaleDateString('en-CA', {timeZone:'America/Monterrey'});
+  } else if (currentReportPeriod === 'month') {
+    fromStr = now.toLocaleDateString('en-CA', {timeZone:'America/Monterrey'}).slice(0,7) + '-01';
+    toStr   = now.toLocaleDateString('en-CA', {timeZone:'America/Monterrey'});
+  } else if (currentReportPeriod === 'custom') {
+    fromStr = (document.getElementById('rp-from').value || '').replace(/-/g,'/');
+    toStr   = (document.getElementById('rp-to').value   || '').replace(/-/g,'/');
+    if (!fromStr || !toStr) {
+      area.innerHTML = '<div style="font-size:13px;color:var(--red);text-align:center;padding:10px">期間を選択してください</div>';
+      return;
+    }
+  }
+
+  fromStr = fromStr.replace(/-/g,'/');
+  toStr   = toStr.replace(/-/g,'/');
+
+  try {
+    const url = `${GAS}?action=getSalesReport&from=${encodeURIComponent(fromStr)}&to=${encodeURIComponent(toStr)}`;
+    const res = await fetch(url);
+    const d   = await res.json();
+    if (d.error) throw new Error(d.error);
+    renderReport(d);
+  } catch(e) {
+    area.innerHTML = `<div style="font-size:13px;color:var(--red);text-align:center;padding:10px">⚠️ ${e.message}</div>`;
+  }
+}
+
+function renderReport(d) {
+  const area = document.getElementById('reportArea');
+  if (!area) return;
+  if (!d.categories || !d.categories.length) {
+    area.innerHTML = '<div style="font-size:13px;color:var(--t2);text-align:center;padding:20px">販売データがありません</div>';
+    return;
+  }
+
+  const rows = d.categories.map(c => {
+    const bar = Math.round(c.share);
+    return `
+    <div style="background:var(--c1);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:14px;font-weight:700;color:var(--t1)">${c.name}</span>
+        <span style="font-size:14px;font-weight:700;color:var(--grn)">MXN ${c.sales.toLocaleString()}</span>
+      </div>
+      <div style="background:var(--c2);border-radius:4px;height:6px;margin-bottom:6px">
+        <div style="background:var(--red);border-radius:4px;height:6px;width:${bar}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2)">
+        <span>${c.qty}点販売</span>
+        <span>${c.share}%</span>
+      </div>
+      <details style="margin-top:6px">
+        <summary style="font-size:11px;color:var(--blu);cursor:pointer">商品別を見る</summary>
+        <div style="margin-top:6px">
+          ${c.items.slice(0,10).map(i=>`
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);padding:3px 0;border-bottom:1px solid var(--bd)">
+            <span>${i.name}</span>
+            <span>${i.qty}点 / MXN ${i.sales.toLocaleString()}</span>
+          </div>`).join('')}
+        </div>
+      </details>
+    </div>`;
+  }).join('');
+
+  area.innerHTML = `
+    <div style="background:var(--c2);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between">
+      <div style="font-size:12px;color:var(--t2)">${d.from} 〜 ${d.to}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--grn)">合計 MXN ${d.grandTotal.toLocaleString()}</div>
+    </div>
+    ${rows}`;
+}
+
 async function syncOffline() {
   if (!offline.length || !online) return;
   const toSync = [...offline];
@@ -1605,9 +1727,10 @@ function filterPicker(q) {
   const f      = (q||'').toLowerCase();
   // 文字なしの時は何も表示しない（全件描画を防ぐ）
   if (!f) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">Escribe para buscar...</div>'; return; }
+  const matched = new Set(filterProdsBy(f).map(p => p.id));
   const list   = prods.filter(p =>
     !added.includes(p.id) &&
-    filterProdsBy(f).includes(p)
+    matched.has(p.id)
   ).slice(0, 30); // 上位30件のみ表示
   if (!list.length) { el.innerHTML = '<div style="text-align:center;color:var(--t2);padding:20px;font-size:13px">No se encontraron productos</div>'; return; }
   el.innerHTML = list.map(p => `
